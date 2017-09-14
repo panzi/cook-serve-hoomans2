@@ -1,0 +1,14 @@
+.*
+*~
+*.o
+*.exe
+*.unx
+*.win
+*.backup
+*.zip
+cook_serve_hoomans2
+/build/*
+/dump/**
+__pycache__
+*.pyo
+*.pyc
