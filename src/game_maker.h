@@ -49,7 +49,8 @@ enum gm_section {
 	GM_AUDO,
 	GM_AGRP,
 	GM_LANG,
-	GM_GLOB
+	GM_GLOB,
+	GM_EMBI
 };
 
 enum gm_patch_src {
