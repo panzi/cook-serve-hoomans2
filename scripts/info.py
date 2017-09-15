@@ -58,7 +58,7 @@ def _dump_AUDO(fp, area_size, nesting):
 		offset += 4
 		size, = struct.unpack("<I",data)
 		magic = fp.read(min(4,size))
-		fp.seek(offset,0)
+		fp.seek(offset, 0)
 
 		info = None
 		try:
@@ -67,7 +67,7 @@ def _dump_AUDO(fp, area_size, nesting):
 			elif magic == b'OggS':
 				info = parse_ogg_info(fp)
 		except FileFormatError as e:
-			print(e)
+			print("at offset %d: %s" % (offset, e))
 
 		if info is None:
 			what     = "(data)"
