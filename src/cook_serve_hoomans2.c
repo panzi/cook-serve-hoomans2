@@ -1,6 +1,6 @@
 #include "cook_serve_hoomans2.h"
 #include "game_maker.h"
-#include "csh_patch_def.h"
+#include "csh2_patch_def.h"
 
 #include <strings.h>
 #include <stdbool.h>
@@ -203,7 +203,7 @@ static int find_archive(char *path, size_t pathlen) {
 	// insensitive manner.
 	static const char* const path1[] = {".local/share", "Steam", "SteamApps", "common", "CookServeDelicious2" ,"assets", "game.unx", NULL};
 	static const char* const path2[] = {".steam", "Steam", "SteamApps", "common", "CookServeDelicious2", "assets", "game.unx", NULL};
-	static const char const* const* paths[] = {path1, path2, NULL};
+	static const char* const* paths[] = {path1, path2, NULL};
 
 	const char *home = getenv("HOME");
 
@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// patch the archive
-	if (gm_patch_archive(game_name, csh_patches) != 0) {
+	if (gm_patch_archive(game_name, csh2_patches) != 0) {
 		fprintf(stderr, "*** ERROR: Error patching archive: %s\n", strerror(errno));
 		goto error;
 	}
