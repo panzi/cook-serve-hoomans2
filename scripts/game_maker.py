@@ -140,15 +140,17 @@ def parse_ogg_info(fp):
 	while True:
 		offset = fp.tell()
 		hdr = fp.read(27)
+		if not hdr:
+			break
 		magic, stream_version, type_flags, abs_g_pos, ser_strno, pageno, crc, nsegs = struct.unpack("<4sBBQIIIB",hdr)
 		if magic != b'OggS':
 			if filesize == 0:
 				raise FileFormatError("not an Ogg file: %r" % magic)
 			else:
-				fp.seek(offset,0)
+				fp.seek(offset, 0)
 				break
 		if pageno <= last_pageno:
-			fp.seek(offset,0)
+			fp.seek(offset, 0)
 			break
 		else:
 			last_pageno = pageno
