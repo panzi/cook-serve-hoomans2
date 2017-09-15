@@ -11,14 +11,16 @@ ifeq ($(DEBUG),ON)
 else
 	COMMON_CFLAGS+=-O2
 endif
-POSIX_CFLAGS=$(COMMON_CFLAGS) -pedantic -Wno-gnu-zero-variadic-macro-arguments -fdiagnostics-color
+POSIX_CFLAGS=$(COMMON_CFLAGS) -pedantic -fdiagnostics-color
 CFLAGS=$(COMMON_CFLAGS)
 ARCH_FLAGS=
 
-CSH2_OBJ=$(BUILDDIR_BIN)/game_maker.o \
+CSH2_OBJ=$(BUILDDIR_BIN)/cook_serve_hoomans2.o \
+         $(BUILDDIR_BIN)/game_maker.o \
          $(BUILDDIR_BIN)/png_info.o \
-         $(BUILDDIR_BIN)/csh2_patch_def.o \
-         $(patsubst %.c,%.o,$(wildcard $(BUILDDIR_SRC)/csh2_*_data.c))
+         $(BUILDDIR_BIN)/csh2_patch_def.o
+
+CSH2_DATA_OBJ=$(patsubst %.c,%.o,$(wildcard $(BUILDDIR_SRC)/csh2_*_data.c))
 
 DMP_OBJ=$(BUILDDIR_BIN)/gmdump.o \
         $(BUILDDIR_BIN)/game_maker.o \
@@ -70,7 +72,8 @@ endif
 endif
 endif
 
-.PHONY: all clean cook_serve_hoomans2 gmdump gmupdate patch setup pkg build_sprites
+.PHONY: all clean cook_serve_hoomans2 gmdump gmupdate patch setup pkg \
+        build_sprites internal_make_binary
 
 # keep intermediary files (e.g. csh2_patch_def.c) to
 # do less redundant work (when cross compiling):
@@ -152,8 +155,11 @@ $(BUILDDIR_BIN)/cook_serve_hoomans2.o: \
 		$(BUILDDIR_SRC)/csh2_patch_def.h
 	$(CC) $(ARCH_FLAGS) $(CFLAGS) -c $< -o $@
 
+internal_make_binary: $(CSH2_OBJ) $(CSH2_DATA_OBJ)
+	$(CC) $(ARCH_FLAGS) $(CSH2_OBJ) $(CSH2_DATA_OBJ) -o $(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT)
+
 $(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT): $(BUILDDIR_SRC)/csh2_patch_def.h $(CSH2_OBJ)
-	$(CC) $(ARCH_FLAGS) $(CSH2_OBJ) -o $@
+	$(MAKE) internal_make_binary
 
 $(BUILDDIR_BIN)/gmdump$(BINEXT): $(DMP_OBJ)
 	$(CC) $(ARCH_FLAGS) $(DMP_OBJ) -o $@
@@ -167,6 +173,8 @@ $(BUILDDIR_BIN)/gmupdate$(BINEXT): $(UPD_OBJ)
 clean: VERSION=$(shell git describe --tags)
 clean:
 	rm -f \
+		$(CSH2_OBJ) \
+		$(CSH2_DATA_OBJ) \
 		$(BUILDDIR_SRC)/csh2_*_data.c \
 		$(BUILDDIR_SRC)/csh2_patch_def.h \
 		$(BUILDDIR_SRC)/csh2_patch_def.c \
@@ -175,8 +183,6 @@ clean:
 		$(BUILDDIR_BIN)/gmdump.o \
 		$(BUILDDIR_BIN)/gminfo.o \
 		$(BUILDDIR_BIN)/gmupdate.o \
-		$(BUILDDIR_BIN)/game_maker.o \
-		$(BUILDDIR_BIN)/png_info.o \
 		$(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT) \
 		$(BUILDDIR_BIN)/gmdump$(BINEXT) \
 		$(BUILDDIR_BIN)/gminfo$(BINEXT) \
