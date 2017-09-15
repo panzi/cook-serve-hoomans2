@@ -1096,7 +1096,7 @@ int gm_patch_archive(const char *filename, const struct gm_patch *patches) {
 			}
 			const uint32_t fileinfo_offset = (uint32_t)ptr->offset + 12 + 4 * ptr->entry_count;
 			for (size_t i = 0; i < ptr->entry_count; ++ i) {
-				WRITE_U32LE(buffer, fileinfo_offset + i * 8);
+				WRITE_U32LE(buffer, fileinfo_offset + i * 12);
 				if (fwrite(buffer, 4, 1, tmp) != 1) {
 					goto error;
 				}
