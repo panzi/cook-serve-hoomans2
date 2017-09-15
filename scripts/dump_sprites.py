@@ -27,6 +27,8 @@ def dump_sprites(fp, outdir):
 		raise ValueError("file size overflow: file size = %d, read size = %d" % (
 			file_size, expected))
 
+	os.makedirs(outdir, exist_ok=True)
+
 	end_offset = fp.tell() + size
 	txtrs = []
 	sprts = {}

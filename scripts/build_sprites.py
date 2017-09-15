@@ -175,7 +175,7 @@ def build_sprites(fp, spritedir, builddir):
 		patch_def.append("GM_PATCH_TXTR(%d, csh2_%05d_data, %d, %d, %d)" % (index, index, len(data), width, height))
 		data_filename = 'csh2_%05d_data.c' % index
 
-		hex_data = ',\n\t'.join(', '.join('0x%02x' % byte for byte in data[i:i+8]) for i in range(0,len(data),8))
+		hex_data = ',\n\t'.join(', '.join('0x%02x' % byte for byte in data[i:i + 8]) for i in range(0, len(data), 8))
 
 		data_c = """\
 #include <stdint.h>
@@ -187,8 +187,19 @@ const uint8_t csh2_%05d_data[] = {
 
 		out_filename = pjoin(builddir, data_filename)
 		print(out_filename)
-		with open(out_filename, 'w') as outfp:
-			outfp.write(data_c)
+
+		# speed up compilation by only re-generating C files with changes
+		try:
+			with open(out_filename, 'r') as outfp:
+				old_data_c = outfp.read()
+		except FileNotFoundError:
+			write_file = True
+		else:
+			write_file = old_data_c != data_c
+
+		if write_file:
+			with open(out_filename, 'w') as outfp:
+				outfp.write(data_c)
 
 	patch_def_h = """\
 #ifndef CSH2_PATCH_DEF_H

@@ -155,6 +155,7 @@ $(BUILDDIR_BIN)/cook_serve_hoomans2.o: \
 		$(BUILDDIR_SRC)/csh2_patch_def.h
 	$(CC) $(ARCH_FLAGS) $(CFLAGS) -c $< -o $@
 
+# recursive make trick so $(CSH2_DATA_OBJ) is expanded for the generated C files
 internal_make_binary: $(CSH2_OBJ) $(CSH2_DATA_OBJ)
 	$(CC) $(ARCH_FLAGS) $(CSH2_OBJ) $(CSH2_DATA_OBJ) -o $(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT)
 
