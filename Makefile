@@ -17,10 +17,8 @@ ARCH_FLAGS=
 
 CSH2_OBJ=$(BUILDDIR_BIN)/game_maker.o \
          $(BUILDDIR_BIN)/png_info.o \
-         $(BUILDDIR_BIN)/csh2_00017_data.o \
-         $(BUILDDIR_BIN)/csh2_00042_data.o \
-         $(BUILDDIR_BIN)/csh2_00047_data.o \
-         $(BUILDDIR_BIN)/csh2_patch_def.o
+         $(BUILDDIR_BIN)/csh2_patch_def.o \
+         $(patsubst %.c,%.o,$(wildcard $(BUILDDIR_SRC)/csh2_*_data.c))
 
 DMP_OBJ=$(BUILDDIR_BIN)/gmdump.o \
         $(BUILDDIR_BIN)/game_maker.o \
@@ -106,14 +104,14 @@ macpkg: $(BUILDDIR_BIN)/cook_serve_hoomans2_$(VERSION)_mac.zip
 $(BUILDDIR_BIN)/cook_serve_hoomans2_$(VERSION)_mac.zip: \
 		$(BUILDDIR_BIN)/cook_serve_hoomans2 \
 		$(BUILDDIR_BIN)/cook_serve_hoomans2.command \
-		$(BUILDDIR_BIN)/open_with_cook_serve_hoomans.command \
+		$(BUILDDIR_BIN)/open_with_cook_serve_hoomans2.command \
 		$(BUILDDIR_BIN)/README.txt
 	mkdir -p $(BUILDDIR_BIN)/bin
-	cp $(BUILDDIR_BIN)/cook_serve_hoomans $(BUILDDIR_BIN)/bin
-	cd $(BUILDDIR_BIN); zip -r9 cook_serve_hoomans_$(VERSION)_mac.zip \
+	cp $(BUILDDIR_BIN)/cook_serve_hoomans2 $(BUILDDIR_BIN)/bin
+	cd $(BUILDDIR_BIN); zip -r9 cook_serve_hoomans2_$(VERSION)_mac.zip \
 		bin \
-		cook_serve_hoomans.command \
-		open_with_cook_serve_hoomans.command \
+		cook_serve_hoomans2.command \
+		open_with_cook_serve_hoomans2.command \
 		README.txt
 	rm -r $(BUILDDIR_BIN)/bin
 
@@ -123,11 +121,10 @@ $(BUILDDIR_BIN)/%.command: osx/%.command
 $(BUILDDIR_BIN)/README.txt: osx/README.txt
 	cp $< $@
 
-$(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET).zip: quick_patch gmdump gminfo gmupdate
+$(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET).zip: gmdump gminfo gmupdate
 	mkdir -p $(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET)
 	cp \
 		README.md \
-		$(BUILDDIR_BIN)/quick_patch$(BINEXT) \
 		$(BUILDDIR_BIN)/gmdump$(BINEXT) \
 		$(BUILDDIR_BIN)/gminfo$(BINEXT) \
 		$(BUILDDIR_BIN)/gmupdate$(BINEXT) \
@@ -136,10 +133,13 @@ $(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET).zip: quick_patch g
 		utils-for-advanced-users-$(VERSION)-$(TARGET)
 	rm -r $(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET)
 
-$(BUILDDIR_SRC)/csh_patch_def.h: $(wildcard sprites/*/*.png) scripts/build_sprites.py
+$(BUILDDIR_SRC)/csh2_patch_def.h: $(wildcard sprites/*/*.png) scripts/build_sprites.py
 	scripts/build_sprites.py sprites $(BUILDDIR_SRC)
 
-$(BUILDDIR_SRC)/%_png.h: $(BUILDDIR_SRC)/%_png.c;
+$(BUILDDIR_SRC)/csh2_patch_def.c: $(BUILDDIR_SRC)/csh2_patch_def.h
+
+$(BUILDDIR_BIN)/csh2_patch_def.o: $(BUILDDIR_SRC)/csh2_patch_def.c src/game_maker.h
+	$(CC) $(ARCH_FLAGS) $(CFLAGS) -c $< -o $@
 
 $(BUILDDIR_BIN)/%.o: src/%.c
 	$(CC) $(ARCH_FLAGS) $(CFLAGS) -c $< -o $@
@@ -147,16 +147,13 @@ $(BUILDDIR_BIN)/%.o: src/%.c
 $(BUILDDIR_BIN)/%.o: $(BUILDDIR_SRC)/%.c
 	$(CC) $(ARCH_FLAGS) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR_BIN)/cook_serve_hoomans.o: \
-		src/cook_serve_hoomans.c \
-		$(BUILDDIR_SRC)/csh_patch_def.h
+$(BUILDDIR_BIN)/cook_serve_hoomans2.o: \
+		src/cook_serve_hoomans2.c \
+		$(BUILDDIR_SRC)/csh2_patch_def.h
 	$(CC) $(ARCH_FLAGS) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR_BIN)/cook_serve_hoomans$(BINEXT): $(CSH_OBJ)
-	$(CC) $(ARCH_FLAGS) $(CSH_OBJ) -o $@
-
-$(BUILDDIR_BIN)/quick_patch$(BINEXT): $(QP_OBJ)
-	$(CC) $(ARCH_FLAGS) $(QP_OBJ) -o $@
+$(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT): $(BUILDDIR_SRC)/csh2_patch_def.h $(CSH2_OBJ)
+	$(CC) $(ARCH_FLAGS) $(CSH2_OBJ) -o $@
 
 $(BUILDDIR_BIN)/gmdump$(BINEXT): $(DMP_OBJ)
 	$(CC) $(ARCH_FLAGS) $(DMP_OBJ) -o $@
@@ -170,26 +167,22 @@ $(BUILDDIR_BIN)/gmupdate$(BINEXT): $(UPD_OBJ)
 clean: VERSION=$(shell git describe --tags)
 clean:
 	rm -f \
-		$(BUILDDIR_SRC)/csh_00017_data.c \
-		$(BUILDDIR_SRC)/csh_00042_data.c \
-		$(BUILDDIR_SRC)/csh_00047_data.c \
-		$(BUILDDIR_SRC)/csh_patch_def.h \
-		$(BUILDDIR_SRC)/csh_patch_def.c \
+		$(BUILDDIR_SRC)/csh2_*_data.c \
+		$(BUILDDIR_SRC)/csh2_patch_def.h \
+		$(BUILDDIR_SRC)/csh2_patch_def.c \
 		$(BUILDDIR_BIN)/patch_game.o \
-		$(BUILDDIR_BIN)/cook_serve_hoomans.o \
-		$(BUILDDIR_BIN)/quick_patch.o \
+		$(BUILDDIR_BIN)/cook_serve_hoomans2.o \
 		$(BUILDDIR_BIN)/gmdump.o \
 		$(BUILDDIR_BIN)/gminfo.o \
 		$(BUILDDIR_BIN)/gmupdate.o \
 		$(BUILDDIR_BIN)/game_maker.o \
 		$(BUILDDIR_BIN)/png_info.o \
-		$(BUILDDIR_BIN)/cook_serve_hoomans$(BINEXT) \
-		$(BUILDDIR_BIN)/quick_patch$(BINEXT) \
+		$(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT) \
 		$(BUILDDIR_BIN)/gmdump$(BINEXT) \
 		$(BUILDDIR_BIN)/gminfo$(BINEXT) \
 		$(BUILDDIR_BIN)/gmupdate$(BINEXT) \
 		$(BUILDDIR_BIN)/README.txt \
-		$(BUILDDIR_BIN)/cook_serve_hoomans.command \
-		$(BUILDDIR_BIN)/open_with_cook_serve_hoomans.command \
-		$(BUILDDIR_BIN)/cook_serve_hoomans_$(VERSION)_mac.zip \
+		$(BUILDDIR_BIN)/cook_serve_hoomans2.command \
+		$(BUILDDIR_BIN)/open_with_cook_serve_hoomans2.command \
+		$(BUILDDIR_BIN)/cook_serve_hoomans2_$(VERSION)_mac.zip \
 		$(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET).zip

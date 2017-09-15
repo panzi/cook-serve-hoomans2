@@ -135,7 +135,7 @@ if __name__ == '__main__':
 	if len(sys.argv) > 1:
 		outdir = sys.argv[1]
 	else:
-		outdir = os.path.realpath(pjoin(os.path.dirname(os.path.abspath(__file__)), '..', 'sprites'))
+		outdir = os.path.realpath(pjoin(os.path.dirname(os.path.abspath(__file__)), '..', 'dump'))
 
 	if len(sys.argv) > 2:
 		archive = sys.argv[2]
