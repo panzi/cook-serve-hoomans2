@@ -156,8 +156,8 @@ def build_sprites(fp, spritedir, builddir):
 
 						sprite = Image.open(replacement_sprites[sprite_key])
 						if sprite.size != (width, height):
-							raise FileFormatError("Sprite %s has incompatible size. PNG size: %d x %d, size in game archive: %d x %d" %
-								(sprite_name, sprite.size[0], sprite.size[1], width, height))
+							raise FileFormatError("Sprite %s %d has incompatible size. PNG size: %d x %d, size in game archive: %d x %d" %
+								(sprite_name, tpag_index, sprite.size[0], sprite.size[1], width, height))
 
 						image.paste(sprite, box=(x, y, x + width, y + height))
 
