@@ -20,7 +20,7 @@ CSH2_OBJ=$(BUILDDIR_BIN)/cook_serve_hoomans2.o \
          $(BUILDDIR_BIN)/png_info.o \
          $(BUILDDIR_BIN)/csh2_patch_def.o
 
-CSH2_DATA_OBJ=$(patsubst %.c,%.o,$(wildcard $(BUILDDIR_SRC)/csh2_*_data.c))
+CSH2_DATA_OBJ=$(patsubst $(BUILDDIR_SRC)/%.c,$(BUILDDIR_BIN)/%.o,$(wildcard $(BUILDDIR_SRC)/csh2_*_data.c))
 
 DMP_OBJ=$(BUILDDIR_BIN)/gmdump.o \
         $(BUILDDIR_BIN)/game_maker.o \
@@ -157,19 +157,19 @@ $(BUILDDIR_BIN)/cook_serve_hoomans2.o: \
 
 # recursive make trick so $(CSH2_DATA_OBJ) is expanded for the generated C files
 internal_make_binary: $(CSH2_OBJ) $(CSH2_DATA_OBJ)
-	$(CC) $(ARCH_FLAGS) $(CSH2_OBJ) $(CSH2_DATA_OBJ) -o $(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT)
+	$(CC) $(ARCH_FLAGS) $(CFLAGS) $(CSH2_OBJ) $(CSH2_DATA_OBJ) -o $(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT)
 
 $(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT): $(BUILDDIR_SRC)/csh2_patch_def.h $(CSH2_OBJ)
-	$(MAKE) internal_make_binary
+	$(MAKE) TARGET=$(TARGET) internal_make_binary
 
 $(BUILDDIR_BIN)/gmdump$(BINEXT): $(DMP_OBJ)
-	$(CC) $(ARCH_FLAGS) $(DMP_OBJ) -o $@
+	$(CC) $(ARCH_FLAGS) $(CFLAGS) $(DMP_OBJ) -o $@
 
 $(BUILDDIR_BIN)/gminfo$(BINEXT): $(INF_OBJ)
-	$(CC) $(ARCH_FLAGS) $(INF_OBJ) -o $@
+	$(CC) $(ARCH_FLAGS) $(CFLAGS) $(INF_OBJ) -o $@
 
 $(BUILDDIR_BIN)/gmupdate$(BINEXT): $(UPD_OBJ)
-	$(CC) $(ARCH_FLAGS) $(UPD_OBJ) -o $@
+	$(CC) $(ARCH_FLAGS) $(CFLAGS) $(UPD_OBJ) -o $@
 
 clean: VERSION=$(shell git describe --tags)
 clean:
