@@ -1,4 +1,6 @@
 CC=gcc
+BINNAME=cook_serve_hoomans2
+WIN_BINNAME=Cook, Serve, Hoomans! 2!!
 BINEXT=
 TARGET=$(shell uname|tr '[A-Z]' '[a-z]')$(shell getconf LONG_BIT)
 BUILDDIR=build
@@ -14,6 +16,9 @@ endif
 POSIX_CFLAGS=$(COMMON_CFLAGS) -pedantic -fdiagnostics-color
 CFLAGS=$(COMMON_CFLAGS)
 ARCH_FLAGS=
+WINDRES=windres
+INKSCAPE=inkscape
+CONVERT=convert
 
 CSH2_OBJ=$(BUILDDIR_BIN)/cook_serve_hoomans2.o \
          $(BUILDDIR_BIN)/game_maker.o \
@@ -34,17 +39,34 @@ UPD_OBJ=$(BUILDDIR_BIN)/gmupdate.o \
         $(BUILDDIR_BIN)/game_maker.o \
         $(BUILDDIR_BIN)/png_info.o
 
+ICONS=$(BUILDDIR_SRC)/icon_16.png \
+      $(BUILDDIR_SRC)/icon_20.png \
+      $(BUILDDIR_SRC)/icon_24.png \
+      $(BUILDDIR_SRC)/icon_32.png \
+      $(BUILDDIR_SRC)/icon_40.png \
+      $(BUILDDIR_SRC)/icon_48.png \
+      $(BUILDDIR_SRC)/icon_64.png \
+      $(BUILDDIR_SRC)/icon_96.png \
+      $(BUILDDIR_SRC)/icon_128.png \
+      $(BUILDDIR_SRC)/icon_256.png
+
 EXT_DEP=
 
 ifeq ($(TARGET),win32)
 	CC=i686-w64-mingw32-gcc
+	WINDRES=i686-w64-mingw32-windres
 	ARCH_FLAGS=-m32
 	BINEXT=.exe
+	CSH2_OBJ+=$(BUILDDIR_BIN)/resources.o
+	BINNAME=$(WIN_BINNAME)
 else
 ifeq ($(TARGET),win64)
 	CC=x86_64-w64-mingw32-gcc
+	WINDRES=x86_64-w64-mingw32-windres
 	ARCH_FLAGS=-m64
 	BINEXT=.exe
+	CSH2_OBJ+=$(BUILDDIR_BIN)/resources.o
+	BINNAME=$(WIN_BINNAME)
 else
 ifeq ($(TARGET),linux32)
 	CFLAGS=$(POSIX_CFLAGS)
@@ -73,7 +95,7 @@ endif
 endif
 
 .PHONY: all clean cook_serve_hoomans2 gmdump gmupdate patch setup pkg \
-        build_sprites internal_make_binary
+        build_sprites internal_make_binary icon
 
 # keep intermediary files (e.g. csh2_patch_def.c) to
 # do less redundant work (when cross compiling):
@@ -81,7 +103,7 @@ endif
 
 all: cook_serve_hoomans2 gmdump gmupdate gminfo
 
-cook_serve_hoomans2: $(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT)
+cook_serve_hoomans2: "$(BUILDDIR_BIN)/$(BINNAME)$(BINEXT)"
 
 gmdump: $(BUILDDIR_BIN)/gmdump$(BINEXT)
 
@@ -92,8 +114,8 @@ gmupdate: $(BUILDDIR_BIN)/gmupdate$(BINEXT)
 setup:
 	mkdir -p $(BUILDDIR_BIN) $(BUILDDIR_SRC)
 
-patch: $(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT)
-	$<
+patch: "$(BUILDDIR_BIN)/$(BINNAME)$(BINEXT)"
+	"$<"
 
 build_sprites:
 	scripts/build_sprites.py sprites $(BUILDDIR_SRC)
@@ -103,6 +125,8 @@ pkg: $(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET).zip $(EXT_DEP
 
 macpkg: VERSION=$(shell git describe --tags)
 macpkg: $(BUILDDIR_BIN)/cook_serve_hoomans2_$(VERSION)_mac.zip
+
+icon: $(BUILDDIR_SRC)/icon.ico
 
 $(BUILDDIR_BIN)/cook_serve_hoomans2_$(VERSION)_mac.zip: \
 		$(BUILDDIR_BIN)/cook_serve_hoomans2 \
@@ -157,9 +181,9 @@ $(BUILDDIR_BIN)/cook_serve_hoomans2.o: \
 
 # recursive make trick so $(CSH2_DATA_OBJ) is expanded for the generated C files
 internal_make_binary: $(CSH2_OBJ) $(CSH2_DATA_OBJ)
-	$(CC) $(ARCH_FLAGS) $(CFLAGS) $(CSH2_OBJ) $(CSH2_DATA_OBJ) -o $(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT)
+	$(CC) $(ARCH_FLAGS) $(CFLAGS) $(CSH2_OBJ) $(CSH2_DATA_OBJ) -o "$(BUILDDIR_BIN)/$(BINNAME)$(BINEXT)"
 
-$(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT): $(BUILDDIR_SRC)/csh2_patch_def.h $(CSH2_OBJ)
+"$(BUILDDIR_BIN)/$(BINNAME)$(BINEXT)": $(BUILDDIR_SRC)/csh2_patch_def.h $(CSH2_OBJ)
 	$(MAKE) TARGET=$(TARGET) internal_make_binary
 
 $(BUILDDIR_BIN)/gmdump$(BINEXT): $(DMP_OBJ)
@@ -171,9 +195,24 @@ $(BUILDDIR_BIN)/gminfo$(BINEXT): $(INF_OBJ)
 $(BUILDDIR_BIN)/gmupdate$(BINEXT): $(UPD_OBJ)
 	$(CC) $(ARCH_FLAGS) $(CFLAGS) $(UPD_OBJ) -o $@
 
+$(BUILDDIR_BIN)/resources.o: $(BUILDDIR_SRC)/resources.rc $(BUILDDIR_SRC)/icon.ico
+	$(WINDRES) $< -o $@
+
+$(BUILDDIR_SRC)/resources.rc: windows/resources.rc
+#	iconv -f UTF-8 -t CP1250 $< -o $@
+	cp $< $@
+
+$(BUILDDIR_SRC)/icon.ico: $(ICONS)
+	$(CONVERT) $(ICONS) -background transparent $@
+
+$(ICONS): icon/raccoon.svg
+	$(INKSCAPE) $< --export-width=$(patsubst $(BUILDDIR_SRC)/icon_%.png,%,$@) --export-area-page --export-png=$@
+
 clean: VERSION=$(shell git describe --tags)
 clean:
 	rm -f \
+		$(ICONS) \
+		$(BUILDDIR_SRC)/icon.ico \
 		$(CSH2_OBJ) \
 		$(CSH2_DATA_OBJ) \
 		$(BUILDDIR_SRC)/csh2_*_data.c \
@@ -184,7 +223,7 @@ clean:
 		$(BUILDDIR_BIN)/gmdump.o \
 		$(BUILDDIR_BIN)/gminfo.o \
 		$(BUILDDIR_BIN)/gmupdate.o \
-		$(BUILDDIR_BIN)/cook_serve_hoomans2$(BINEXT) \
+		"$(BUILDDIR_BIN)/$(BINNAME)$(BINEXT)" \
 		$(BUILDDIR_BIN)/gmdump$(BINEXT) \
 		$(BUILDDIR_BIN)/gminfo$(BINEXT) \
 		$(BUILDDIR_BIN)/gmupdate$(BINEXT) \

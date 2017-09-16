@@ -1,0 +1,23 @@
+1 ICON "icon.ico"
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "@bloodyalbatross"
+      VALUE "FileDescription", "A mod for Cook, Serve, Delicious! 2!! that changes certain sprites."
+      VALUE "FileVersion", "1.0"
+      VALUE "OriginalFilename", "Cook, Serve, Hoomans! 2!!.exe"
+      VALUE "InternalName", "Cook, Serve, Hoomans! 2!!"
+      VALUE "ProductName", "Cook, Serve, Hoomans! 2!!"
+      VALUE "ProductVersion", "1.0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END

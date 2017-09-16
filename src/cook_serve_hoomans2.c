@@ -356,7 +356,7 @@ int main(int argc, char *argv[]) {
 		game_name = game_name_buf;
 	}
 
-	printf("Patching game archive: %s\n", game_name);
+	printf("Found game archive: %s\n", game_name);
 
 	// create backup if there isn't one
 	if (GM_CONCAT(backup_name, sizeof(backup_name), game_name, ".backup") != 0) {
@@ -370,18 +370,24 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, "*** ERROR: Backup file is not a regular file.\n");
 			goto error;
 		}
+		printf("Keeping existing backup of game archive.\n");
 	}
 	else if (errno == ENOENT) {
+		printf("Creating backup of game archive...\n");
 		if (copyfile(game_name, backup_name) != 0) {
 			perror("*** ERROR: Creatig backup");
 			goto error;
 		}
-		printf("Created backup of game archive: %s\n", backup_name);
 	}
 	else {
 		perror("*** ERROR: Error accessing backup file");
 		goto error;
 	}
+
+	printf("If you want to remove the mod again delete %s and rename %s.backup to %s (both files are in the same folder).\n",
+		CSH2_GAME_ARCHIVE, CSH2_GAME_ARCHIVE, CSH2_GAME_ARCHIVE);
+
+	printf("Patching the game...\n");
 
 	// patch the archive
 	if (gm_patch_archive(game_name, csh2_patches) != 0) {
@@ -389,7 +395,7 @@ int main(int argc, char *argv[]) {
 		goto error;
 	}
 
-	printf("Successfully pached game.\n");
+	printf("Successfully pached the game! :)\n");
 
 	goto end;
 
