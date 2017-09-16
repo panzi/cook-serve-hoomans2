@@ -281,22 +281,26 @@ int gm_patch_entry(struct gm_patched_index *index, const struct gm_patch *patch)
 				if (entry->meta.sprt.tpag[tpag_index].x != patch->meta.sprt.x ||
 				    entry->meta.sprt.tpag[tpag_index].y != patch->meta.sprt.y ||
 				    entry->meta.sprt.tpag[tpag_index].width  != patch->meta.sprt.width ||
-				    entry->meta.sprt.tpag[tpag_index].height != patch->meta.sprt.height) {
+				    entry->meta.sprt.tpag[tpag_index].height != patch->meta.sprt.height ||
+				    entry->meta.sprt.tpag[tpag_index].txtr_index != patch->meta.sprt.txtr_index) {
 
-					LOG_ERR("Sprite %s %" PRIuPTR " has incompatible coordinates. patch: x=%"
-					        PRIuPTR " y=%" PRIuPTR " width=%" PRIuPTR " height=%"
-					        PRIuPTR ", game archive: x=%" PRIuPTR " y=%" PRIuPTR
-					        " width=%" PRIuPTR " height=%" PRIuPTR,
+					LOG_ERR("Sprite %s %" PRIuPTR " has incompatible coordinates. patch: x=%" PRIuPTR
+					        " y=%" PRIuPTR " width=%" PRIuPTR " height=%" PRIuPTR
+					        " txtr_index=%" PRIuPTR ", game archive: x=%"  PRIuPTR
+					        " y=%" PRIuPTR " width=%" PRIuPTR " height=%" PRIuPTR
+					        " txtr_index=%" PRIuPTR,
 					        patch->meta.sprt.name,
 					        tpag_index,
 					        patch->meta.sprt.x,
 					        patch->meta.sprt.y,
 					        patch->meta.sprt.width,
 					        patch->meta.sprt.height,
+					        patch->meta.sprt.txtr_index,
 					        entry->meta.sprt.tpag[tpag_index].x,
 					        entry->meta.sprt.tpag[tpag_index].y,
 					        entry->meta.sprt.tpag[tpag_index].width,
-					        entry->meta.sprt.tpag[tpag_index].height);
+					        entry->meta.sprt.tpag[tpag_index].height,
+					        entry->meta.sprt.tpag[tpag_index].txtr_index);
 
 					errno = EINVAL;
 					return -1;

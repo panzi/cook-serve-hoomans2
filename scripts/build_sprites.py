@@ -67,14 +67,17 @@ def build_sprites(fp, spritedir, builddir):
 					else:
 						replacement_sprites[(sprite_name, tpag_index)] = pjoin(subpath, filename)
 
+	sprites_by_txtr = {}
 	replacement_sprites_by_txtr = {}
 	replacement_txtrs = {}
+	seen_sprt = False
 	while fp.tell() < end_offset:
 		head = fp.read(8)
 		magic, size = struct.unpack("<4sI", head)
 		next_offset = fp.tell() + size
 
 		if magic == b'SPRT':
+			seen_sprt = True
 			sprite_count, = struct.unpack("<I", fp.read(4))
 			data = fp.read(4 * sprite_count)
 			sprite_offsets = struct.unpack("<%dI" % sprite_count, data)
@@ -95,25 +98,31 @@ def build_sprites(fp, spritedir, builddir):
 
 				for tpag_index, tpag_offset in enumerate(tpag_offsets):
 					sprite_key = (sprite_name, tpag_index)
+
+					fp.seek(tpag_offset, 0)
+					data = fp.read(22)
+					tpag = struct.unpack('<HHHHHHHHHHH', data)
+
+					txtr_index = tpag[-1]
+					rect = tpag[:4]
+
+					sprite_info = (sprite_name, tpag_index, txtr_index, rect)
+
+					if txtr_index in sprites_by_txtr:
+						sprites_by_txtr[txtr_index].append(sprite_info)
+					else:
+						sprites_by_txtr[txtr_index] = [sprite_info]
+
 					if sprite_key in replacement_sprites:
-						fp.seek(tpag_offset, 0)
-						data = fp.read(22)
-						tpag = struct.unpack('<HHHHHHHHHHH', data)
-
-						txtr_index = tpag[-1]
-						(x, y, width, height) = rect = tpag[:4]
-
-						sprite_info = (sprite_name, tpag_index, rect)
 						if txtr_index in replacement_sprites_by_txtr:
 							replacement_sprites_by_txtr[txtr_index].append(sprite_info)
 						else:
 							replacement_sprites_by_txtr[txtr_index] = [sprite_info]
 
-						patch_def.append('GM_PATCH_SPRT("%s", %d, %d, %d, %d, %d, %d)' % (
-							escape_c_string(sprite_name), tpag_index, x, y, width, height, txtr_index))
-
 		elif magic == b'TXTR':
-			# XXX: port
+			if not seen_sprt:
+				raise FileFormatError("found TXTR block before found SPRT block")
+
 			start_offset = fp.tell()
 			count, = struct.unpack("<I", fp.read(4))
 			data = fp.read(4 * count)
@@ -130,7 +139,7 @@ def build_sprites(fp, spritedir, builddir):
 				file_infos.append(info)
 
 			seen_sprites = set()
-			for index, (unknown1, unknown2, offset) in enumerate(file_infos):
+			for txtr_index, (unknown1, unknown2, offset) in enumerate(file_infos):
 				if offset < start_offset or offset > end_offset:
 					raise FileFormatError("illegal TXTR data offset: %d" % offset)
 
@@ -140,14 +149,14 @@ def build_sprites(fp, spritedir, builddir):
 				if offset + info.filesize > end_offset:
 					raise FileFormatError("PNG file at offset %d overflows TXTR data section end" % offset)
 
-				if index in replacement_sprites_by_txtr:
-					sprites = replacement_sprites_by_txtr[index]
+				if txtr_index in replacement_sprites_by_txtr:
+					sprites = replacement_sprites_by_txtr[txtr_index]
 					fp.seek(offset, 0)
 					data = fp.read(info.filesize)
 
 					image = Image.open(BytesIO(data))
 
-					for sprite_name, tpag_index, (x, y, width, height) in sprites:
+					for sprite_name, tpag_index, txtr_index, (x, y, width, height) in sprites:
 						sprite_key = (sprite_name, tpag_index)
 						if sprite_key in seen_sprites:
 							raise FileFormatError("Sprite double occurence: %s %d" % sprite_key)
@@ -162,18 +171,30 @@ def build_sprites(fp, spritedir, builddir):
 						image.paste(sprite, box=(x, y, x + width, y + height))
 
 					# DEBUG:
-					# image.save(pjoin(builddir, '%05d.png' % index))
+					# image.save(pjoin(builddir, '%05d.png' % txtr_index))
 
 					buf = BytesIO()
 					image.save(buf, format='PNG')
-					replacement_txtrs[index] = (image.size, buf.getvalue())
+					replacement_txtrs[txtr_index] = (image.size, buf.getvalue())
 
 		fp.seek(next_offset, 0)
 
-	for index, ((width, height), data) in replacement_txtrs.items():
-		patch_data_externs.append('extern const uint8_t csh2_%05d_data[];' % index)
-		patch_def.append("GM_PATCH_TXTR(%d, csh2_%05d_data, %d, %d, %d)" % (index, index, len(data), width, height))
-		data_filename = 'csh2_%05d_data.c' % index
+	check_sprites = []
+	for txtr_index in replacement_txtrs:
+		check_sprites.extend(sprites_by_txtr[txtr_index])
+	check_sprites.sort()
+
+	# check all coordinates of sprites in replaced textures
+	for sprite_name, tpag_index, txtr_index, (x, y, width, height) in check_sprites:
+		patch_def.append('GM_PATCH_SPRT("%s", %d, %d, %d, %d, %d, %d)' % (
+			escape_c_string(sprite_name), tpag_index, x, y, width, height, txtr_index))
+
+	for txtr_index in sorted(replacement_txtrs):
+		((width, height), data) = replacement_txtrs[txtr_index]
+
+		patch_data_externs.append('extern const uint8_t csh2_%05d_data[];' % txtr_index)
+		patch_def.append("GM_PATCH_TXTR(%d, csh2_%05d_data, %d, %d, %d)" % (txtr_index, txtr_index, len(data), width, height))
+		data_filename = 'csh2_%05d_data.c' % txtr_index
 
 		hex_data = ',\n\t'.join(', '.join('0x%02x' % byte for byte in data[i:i + 8]) for i in range(0, len(data), 8))
 
@@ -183,7 +204,7 @@ def build_sprites(fp, spritedir, builddir):
 const uint8_t csh2_%05d_data[] = {
 	%s
 };
-""" % (index, hex_data)
+""" % (txtr_index, hex_data)
 
 		out_filename = pjoin(builddir, data_filename)
 		print(out_filename)
