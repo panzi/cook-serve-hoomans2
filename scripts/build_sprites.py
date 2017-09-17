@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
 from PIL import Image
 from io import BytesIO
@@ -179,15 +180,35 @@ def build_sprites(fp, spritedir, builddir):
 
 		fp.seek(next_offset, 0)
 
-	check_sprites = []
+	check_sprites = {}
 	for txtr_index in replacement_txtrs:
-		check_sprites.extend(sprites_by_txtr[txtr_index])
-	check_sprites.sort()
+		for sprite_info in sprites_by_txtr[txtr_index]:
+			sprite_name = sprite_info[0]
+			if sprite_name in check_sprites:
+				check_sprites[sprite_name].append(sprite_info)
+			else:
+				check_sprites[sprite_name] = [sprite_info]
 
 	# check all coordinates of sprites in replaced textures
-	for sprite_name, tpag_index, txtr_index, (x, y, width, height) in check_sprites:
-		patch_def.append('GM_PATCH_SPRT("%s", %d, %d, %d, %d, %d, %d)' % (
-			escape_c_string(sprite_name), tpag_index, x, y, width, height, txtr_index))
+	non_ident = re.compile('[^_a-z0-9]', re.I)
+	sprt_defs = []
+	for sprite_name in sorted(check_sprites):
+		ident = non_ident.sub('_', sprite_name)
+		tpags = check_sprites[sprite_name]
+		tpags.sort(key=lambda sprite_info: sprite_info[1])
+		tpag_defs = []
+
+		for _, tpag_index, txtr_index, (x, y, width, height) in tpags:
+			tpag_defs.append('{%d, %d, %d, %d, %d, %d}' % (tpag_index, x, y, width, height, txtr_index))
+
+		sprt_defs.append("""
+static struct gm_patch_sprt_entry csh2_sprt_%s[] = {
+	%s
+};
+""" % (ident, ',\n\t'.join(tpag_defs)))
+
+		patch_def.append('GM_PATCH_SPRT("%s", csh2_sprt_%s, %d)' % (
+			escape_c_string(sprite_name), ident, len(tpag_defs)))
 
 	for txtr_index in sorted(replacement_txtrs):
 		((width, height), data) = replacement_txtrs[txtr_index]
@@ -251,12 +272,12 @@ extern const struct gm_patch csh2_patches[];
 
 	patch_def_c = """\
 #include "csh2_patch_def.h"
-
+%s
 const struct gm_patch csh2_patches[] = {
 	%s,
 	GM_PATCH_END
 };
-""" % ',\n\t'.join(patch_def)
+""" % (''.join(sprt_defs), ',\n\t'.join(patch_def))
 
 	out_filename = pjoin(builddir, 'csh2_patch_def.c')
 	print(out_filename)

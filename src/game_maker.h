@@ -58,6 +58,15 @@ enum gm_patch_src {
 	GM_SRC_FILE
 };
 
+struct gm_patch_sprt_entry {
+	size_t tpag_index;
+	size_t x;
+	size_t y;
+	size_t width;
+	size_t height;
+	size_t txtr_index;
+};
+
 struct gm_patch {
 	enum gm_section   section;
 	size_t            index;
@@ -78,18 +87,14 @@ struct gm_patch {
 
 		struct {
 			const char *name;
-			size_t tpag_index;
-			size_t x;
-			size_t y;
-			size_t width;
-			size_t height;
-			size_t txtr_index;
+			size_t entry_count;
+			const struct gm_patch_sprt_entry *entries;
 		} sprt;
 	} meta;
 };
 
-#define GM_PATCH_SPRT(NAME, TPAG_INDEX, X, Y, WIDTH, HEIGHT, TXTR_INDEX) \
-	{ GM_SPRT, 0, GM_PNG, GM_SRC_MEM, 0, { .data = NULL }, { .sprt = { (NAME), (TPAG_INDEX), (X), (Y), (WIDTH), (HEIGHT), (TXTR_INDEX) } } }
+#define GM_PATCH_SPRT(NAME, ENTRIES, ENTRY_COUNT) \
+	{ GM_SPRT, 0, GM_PNG, GM_SRC_MEM, 0, { .data = NULL }, { .sprt = { (NAME), (ENTRY_COUNT), (ENTRIES) } } }
 
 #define GM_PATCH_TXTR(INDEX, DATA, SIZE, WIDTH, HEIGHT) \
 	{ GM_TXTR, (INDEX), GM_PNG, GM_SRC_MEM, (SIZE), { .data = (DATA) }, { .txtr = { (WIDTH), (HEIGHT) } } }
