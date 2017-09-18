@@ -249,7 +249,7 @@ static int copyfile(const char *src, const char *dst) {
 		goto error;
 	}
 
-	outfd = open(dst, O_CREAT | O_WRONLY);
+	outfd = open(dst, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 	if (outfd < 0) {
 		goto error;
 	}
