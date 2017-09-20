@@ -1,6 +1,7 @@
 CC=gcc
 BINNAME=cook_serve_hoomans2
-WIN_BINNAME=Cook, Serve, Hoomans! 2!!
+# stupid github limits file names unnecesarrily
+WIN_BINNAME=Cook-Serve-Hoomans-2
 BINEXT=
 TARGET=$(shell uname|tr '[A-Z]' '[a-z]')$(shell getconf LONG_BIT)
 BUILDDIR=build
