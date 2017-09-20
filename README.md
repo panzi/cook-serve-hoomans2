@@ -20,7 +20,7 @@ Setup
 -----
 
 Download the latest release from the [releases page](https://github.com/panzi/cook-serve-hoomans2/releases)
-and double click `Cook, Serve, Hoomans! 2!!.exe`. It should automatically find
+and double click `Cook-Serve-Hoomans-2.exe`. It should automatically find
 the installation path of Cook, Serve, Delicious! 2!! and patch the game archive.
 If everything went well you should see something like this:
 
@@ -36,7 +36,7 @@ remove the patch simply delete `data.win`/`game.unx` and rename the backup file.
 
 ### In case that didn't work
 
-In case `Cook, Serve, Hoomans! 2!!.exe` couldn't automatically find the game
+In case `Cook-Serve-Hoomans-2.exe` couldn't automatically find the game
 archive file you can pass it manually. First find `data.win` from your Cook,
 Serve, Delicious! 2!! installation. Under Windows `data.win` can usually be
 found at one of these or similar locations:
@@ -57,7 +57,7 @@ I don't have a Mac so I don't know where it's there and I can't provide a binary
 for Mac anyway. (I don't use Windows either, but it is easily possible to cross
 compile a Windows binary under Linux.)
 
-Then simply drag and drop `data.win` onto `Cook, Serve, Hoomans! 2!!.exe`:
+Then simply drag and drop `data.win` onto `Cook-Serve-Hoomans-2.exe`:
 
 ![](http://panzi.github.io/cook-serve-hoomans2/img/open_with_cook_serve_hoomans.png)
 
