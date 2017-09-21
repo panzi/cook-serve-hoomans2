@@ -228,7 +228,6 @@ const uint8_t csh2_%05d_data[] = {
 """ % (txtr_index, hex_data)
 
 		out_filename = pjoin(builddir, data_filename)
-		print(out_filename)
 
 		# speed up compilation by only re-generating C files with changes
 		try:
@@ -240,6 +239,7 @@ const uint8_t csh2_%05d_data[] = {
 			write_file = old_data_c != data_c
 
 		if write_file:
+			print(out_filename)
 			with open(out_filename, 'w') as outfp:
 				outfp.write(data_c)
 
