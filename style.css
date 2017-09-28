@@ -1,0 +1,64 @@
+body {
+	font-family: "Open Sans", sans-serif;
+	font-size: 20px;
+	color: #101010;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: "Dosis", sans-serif;
+	color: #050505;
+	text-align: center;
+}
+
+h1 {
+	margin: 2em 0 1em 0;
+}
+
+.hoomans {
+	text-align: center;
+	padding: 5em 2em;
+}
+
+.hooman {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	width: 180px;
+	height: 340px;
+	margin: 1rem;
+	text-align: center;
+}
+
+.hooman-img {
+	position: absolute;
+	top: -130px;
+	left: -50%;
+	height: 520px;
+	width: 200%;
+	line-height: 520px;
+	margin: auto 0;
+	transform: scale(0.5);
+	transition: transform 500ms;
+	-webkit-pointer-events: none;
+	-moz-pointer-events: none;
+	pointer-events: none;
+}
+
+.hooman:hover .hooman-img {
+	transform: scale(1);
+	z-index: 100;
+}
+
+.hooman-img img {
+	vertical-align: bottom;
+}
+
+.hooman .label {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	padding: 1rem;
+	z-index: 100;
+	text-shadow: 0 0 0.5em white;
+}
