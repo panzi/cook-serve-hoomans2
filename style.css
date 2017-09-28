@@ -2,6 +2,7 @@ body {
 	font-family: "Open Sans", sans-serif;
 	font-size: 20px;
 	color: #101010;
+	background: white;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -60,5 +61,6 @@ h1 {
 	bottom: 0;
 	padding: 1rem;
 	z-index: 100;
-	text-shadow: 0 0 0.5em white;
+	background: rgba(255,255,255,0.6);
+	border-radius: 1em;
 }
