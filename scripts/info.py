@@ -194,6 +194,31 @@ def _dump_OBJT(fp,area_size,nesting):
 
 	fp.seek(end_offset, 0)
 
+def _dump_STRG(fp,area_size,nesting):
+	start_offset = fp.tell()
+	end_offset = start_offset + area_size
+	indent1 = " " * (nesting * 3)
+	indent2 = " " * (10 - (nesting * 3))
+
+	count, = struct.unpack("<I", fp.read(4))
+	data = fp.read(4 * count)
+	offsets = struct.unpack("<%dI" % count, data)
+
+	for index, offset in enumerate(offsets):
+		fp.seek(offset, 0)
+		data = fp.read(4)
+		size, = struct.unpack("<I", data)
+		data = fp.read(size).rstrip(b"\0")
+		lines = data.decode().split("\n", 1)
+		first_line = lines[0]
+		if len(lines) > 1 or len(first_line) > 140:
+			text = first_line[:140] + '…'
+		else:
+			text = first_line
+		print("%s(data)%s %10d %10d %4d %s" % (indent1, indent2, offset, size, index, text))
+
+	fp.seek(end_offset, 0)
+
 GEN8_STRING_INDICES = {1, 2, 10, 25}
 
 def _dump_GEN8(fp,area_size,nesting):
@@ -249,6 +274,8 @@ def _dump_info(fp,area_size,nesting):
 					_dump_TPAG(fp,rem,nesting)
 #				elif magic == b'OBJT':
 #					_dump_OBJT(fp,rem,nesting)
+				elif magic == b'STRG':
+					_dump_STRG(fp,rem,nesting)
 				else:
 					while rem > 0:
 						nondata, child_magic, child_size = _dump_info(fp,rem,nesting)
