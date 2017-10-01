@@ -9,6 +9,7 @@
 cook_serve_hoomans2
 /build/*
 /dump/**
+/dump_*/**
 __pycache__
 *.pyo
 *.pyc
