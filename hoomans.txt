@@ -29,7 +29,7 @@ Gigglebites              CUST_SPR_POOR/18.png
 Thrace                   CUST_SPR_POOR/66.png
 angrywelshgamer          CUST_SPR_POOR/42.png
 ZaZu                     CUST_SPR_POOR/21.png
-LittleTechGirl           CUST_SPR_POOR/10.png
+Zen_State                CUST_SPR_POOR/10.png
 HugoRune42               CUST_SPR_POOR/58.png
 Dramademon               CUST_SPR_POOR/24.png
 CD_Williams              CUST_SPR_POOR/46.png
@@ -57,3 +57,4 @@ GeniusMadness            CUST_SPR_POOR/30.png
 Danno Awesomeface        CUST_SPR_COMMON/69.png
 Andrew Tiarks            CUST_SPR_POOR/69.png
 Soylent Heston           CUST_SPR_POOR/68.png
+Alegna                   CUST_SPR_POOR/14.png
