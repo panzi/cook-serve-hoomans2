@@ -20,6 +20,7 @@ ARCH_FLAGS=
 WINDRES=windres
 INKSCAPE=inkscape
 CONVERT=convert
+ARCHIVE=$(shell ./scripts/find_archive.py)
 
 CSH2_OBJ=$(BUILDDIR_BIN)/cook_serve_hoomans2.o \
          $(BUILDDIR_BIN)/game_maker.o \
@@ -96,7 +97,7 @@ endif
 endif
 
 .PHONY: all clean cook_serve_hoomans2 gmdump gmupdate patch setup pkg \
-        build_sprites internal_make_binary icon
+        build_sprites internal_make_binary icon unpatch
 
 # keep intermediary files (e.g. csh2_patch_def.c) to
 # do less redundant work (when cross compiling):
@@ -117,6 +118,9 @@ setup:
 
 patch: "$(BUILDDIR_BIN)/$(BINNAME)$(BINEXT)"
 	"$<"
+
+unpatch: $(ARCHIVE).backup
+	cp "$<" "$(ARCHIVE)"
 
 build_sprites:
 	scripts/build_sprites.py sprites $(BUILDDIR_SRC)
