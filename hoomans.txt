@@ -58,3 +58,5 @@ Danno Awesomeface        CUST_SPR_COMMON/69.png
 Andrew Tiarks            CUST_SPR_POOR/69.png
 Soylent Heston           CUST_SPR_POOR/68.png
 Alegna                   CUST_SPR_POOR/14.png
+Dani Figueiredo          CUST_SPR_POOR/19.png
+BelliBellBell            CUST_SPR_POOR/28.png
