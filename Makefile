@@ -1,2 +1,2 @@
-hoomans.html: hoomans.html.templ hoomans.txt
+hoomans.html: hoomans.html.templ hoomans.txt ./convert.py
 	./convert.py

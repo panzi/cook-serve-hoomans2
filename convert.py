@@ -9,7 +9,7 @@ def make_hoomans_html():
     
     hoomans = []
     with open("hoomans.txt") as fp:
-        for line in sorted(list(fp)):
+        for line in sorted(list(fp), key=lambda name: name.lower()):
             name = line[:25].strip()
             img  = line[25:].strip()
             img_url = 'https://raw.githubusercontent.com/panzi/cook-serve-hoomans2/master/sprites/' + img
