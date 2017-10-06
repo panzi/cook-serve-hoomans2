@@ -60,3 +60,5 @@ Soylent Heston           CUST_SPR_POOR/68.png
 Alegna                   CUST_SPR_POOR/14.png
 Dani Figueiredo          CUST_SPR_POOR/19.png
 BelliBellBell            CUST_SPR_POOR/28.png
+Michelle Wavrick         CUST_SPR_POOR/25.png
+Mcs0083                  CUST_SPR_POOR/39.png
