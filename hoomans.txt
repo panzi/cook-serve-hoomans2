@@ -62,3 +62,5 @@ Dani Figueiredo          CUST_SPR_POOR/19.png
 BelliBellBell            CUST_SPR_POOR/28.png
 Michelle Wavrick         CUST_SPR_POOR/25.png
 Mcs0083                  CUST_SPR_POOR/39.png
+DRCroston                CUST_SPR_POOR/36.png
+Bensmith999              CUST_SPR_POOR/48.png
