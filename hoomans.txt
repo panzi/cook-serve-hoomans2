@@ -64,3 +64,6 @@ Michelle Wavrick         CUST_SPR_POOR/25.png
 Mcs0083                  CUST_SPR_POOR/39.png
 DRCroston                CUST_SPR_POOR/36.png
 Bensmith999              CUST_SPR_POOR/48.png
+sarahthepearl            CUST_SPR_COMMON/31.png
+sarahbabe                CUST_SPR_COMMON/34.png
+inbntly                  CUST_SPR_COMMON/44.png
