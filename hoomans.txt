@@ -71,4 +71,4 @@ Ryon Day                 CUST_SPR_POOR/52.png
 Darryl Browne            CUST_SPR_POOR/45.png
 Yakumo Fujii             CUST_SPR_COMMON/72.png
 TheFruityKiwi            CUST_SPR_POOR/29.png
-Crystal Levenson         CUST_SPR_POOR/TODO.png
+Crystal Levenson         CUST_SPR_POOR/23.png
