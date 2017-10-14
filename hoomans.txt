@@ -72,3 +72,6 @@ Darryl Browne            CUST_SPR_POOR/45.png
 Yakumo Fujii             CUST_SPR_COMMON/72.png
 TheFruityKiwi            CUST_SPR_POOR/29.png
 Crystal Levenson         CUST_SPR_POOR/23.png
+GisliT                   CUST_SPR_POOR/54.png
+Zack Pasters             CUST_SPR_POOR/55.png
+ShadracMould             CUST_SPR_POOR/57.png
