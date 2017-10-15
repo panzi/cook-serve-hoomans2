@@ -76,3 +76,6 @@ GisliT                   CUST_SPR_POOR/54.png
 Zack Pasters             CUST_SPR_POOR/55.png
 ShadracMould             CUST_SPR_POOR/57.png
 Leader_of_sheeple        CUST_SPR_POOR/60.png
+Alfgart                  CUST_SPR_POOR/51.png
+Farce Master             CUST_SPR_POOR/59.png
+War_Demon                CUST_SPR_POOR/56.png
