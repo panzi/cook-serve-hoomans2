@@ -79,3 +79,4 @@ Leader_of_sheeple        CUST_SPR_POOR/60.png
 Alfgart                  CUST_SPR_POOR/51.png
 Farce Master             CUST_SPR_POOR/59.png
 War_Demon                CUST_SPR_POOR/56.png
+UTDevilDog               CUST_SPR_COMMON/46.png
