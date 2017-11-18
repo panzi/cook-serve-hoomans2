@@ -33,6 +33,11 @@ exist already). The backup will be placed in the same folder as the game archive
 (`data.win` on Windows and `game.unx` on Linux) and will be called
 `data.win.backup` on Windows and `game.unx.backup` on Linux. If you want to
 remove the patch simply delete `data.win`/`game.unx` and rename the backup file.
+Under Windows you might need to disable hiding of file name extensions in order
+to be able to rename that file.
+
+Another way to undo the mod is simply to verify the game file integrity with
+Steam, which will detect the modification and re-download the game.
 
 ### In case that didn't work
 
