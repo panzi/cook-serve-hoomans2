@@ -4,7 +4,7 @@ bloody_albatross         CUST_SPR_POOR/43.png
 urLABness                CUST_SPR_POOR/31.png
 Vessiot                  CUST_SPR_COMMON/67.png
 Eric Barkman             CUST_SPR_POOR/47.png
-Cowpeeler                CUST_SPR_POOR/72.png
+Cowpeeler                CUST_SPR_COMMON/51.png
 Pandaherbs               CUST_SPR_POOR/34.png
 Kristen Walsh            CUST_SPR_POOR/5.png
 Candace Zahnzinger       CUST_SPR_COMMON/4.png
@@ -80,3 +80,4 @@ Alfgart                  CUST_SPR_POOR/51.png
 Farce Master             CUST_SPR_POOR/59.png
 War_Demon                CUST_SPR_POOR/56.png
 UTDevilDog               CUST_SPR_COMMON/46.png
+Bloodious                CUST_SPR_POOR/72.png
