@@ -1,6 +1,12 @@
-#ifndef COOK_SERVE_HOOMANS2_H
-#define COOK_SERVE_HOOMANS2_H
+#ifndef CSD2_FIND_ARCHIVE_H
+#define CSD2_FIND_ARCHIVE_H
 #pragma once
+
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if defined(_WIN16) || defined(_WIN32) || defined(_WIN64)
 #	define CSH2_GAME_ARCHIVE "data.win"
@@ -8,6 +14,12 @@
 #	define CSH2_GAME_ARCHIVE "game.ios"
 #else
 #	define CSH2_GAME_ARCHIVE "game.unx"
+#endif
+
+int csd2_find_archive(char *path, size_t pathlen);
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

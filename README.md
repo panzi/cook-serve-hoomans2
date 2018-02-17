@@ -77,6 +77,21 @@ If you can handle the shell there are the binaries: `gmdump.exe` and
 a Game Maker archive into a directory. After you edited those files you can
 use the second program to update the archive.
 
+If you don't explicitely pass the game archive to these two programs they try to
+find it themselves and if you don't pass a directory to them they will use the
+current working directory. So just executing them without any arguments in the
+working directory of your texture files is enough.
+
+**WARNING:** `gmdump.exe` will overwrite any existing texture files without asking.
+So pay attention on where you execute this program.
+
+### Windows Users
+
+For Windows users that don't know/want to use the shell: Simple create a new
+directory, then drag and drop this directory onto `gmdump.exe`, change the images
+that you want to change and delete the others, and finally drop the same directory
+onto `gmupdate.exe`.
+
 Build From Source
 -----------------
 

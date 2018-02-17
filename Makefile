@@ -23,6 +23,7 @@ CONVERT=convert
 ARCHIVE=$(shell ./scripts/find_archive.py)
 
 CSH2_OBJ=$(BUILDDIR_BIN)/cook_serve_hoomans2.o \
+         $(BUILDDIR_BIN)/csd2_find_archive.o \
          $(BUILDDIR_BIN)/game_maker.o \
          $(BUILDDIR_BIN)/png_info.o \
          $(BUILDDIR_BIN)/csh2_patch_def.o
@@ -30,14 +31,17 @@ CSH2_OBJ=$(BUILDDIR_BIN)/cook_serve_hoomans2.o \
 CSH2_DATA_OBJ=$(patsubst $(BUILDDIR_SRC)/%.c,$(BUILDDIR_BIN)/%.o,$(wildcard $(BUILDDIR_SRC)/csh2_*_data.c))
 
 DMP_OBJ=$(BUILDDIR_BIN)/gmdump.o \
+        $(BUILDDIR_BIN)/csd2_find_archive.o \
         $(BUILDDIR_BIN)/game_maker.o \
         $(BUILDDIR_BIN)/png_info.o
 
 INF_OBJ=$(BUILDDIR_BIN)/gminfo.o \
+        $(BUILDDIR_BIN)/csd2_find_archive.o \
         $(BUILDDIR_BIN)/game_maker.o \
         $(BUILDDIR_BIN)/png_info.o
 
 UPD_OBJ=$(BUILDDIR_BIN)/gmupdate.o \
+        $(BUILDDIR_BIN)/csd2_find_archive.o \
         $(BUILDDIR_BIN)/game_maker.o \
         $(BUILDDIR_BIN)/png_info.o
 
@@ -225,6 +229,7 @@ clean:
 		$(BUILDDIR_SRC)/csh2_patch_def.c \
 		$(BUILDDIR_BIN)/patch_game.o \
 		$(BUILDDIR_BIN)/cook_serve_hoomans2.o \
+		$(BUILDDIR_BIN)/csd2_find_archive.o \
 		$(BUILDDIR_BIN)/gmdump.o \
 		$(BUILDDIR_BIN)/gminfo.o \
 		$(BUILDDIR_BIN)/gmupdate.o \
