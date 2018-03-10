@@ -121,7 +121,7 @@ setup:
 	mkdir -p $(BUILDDIR_BIN) $(BUILDDIR_SRC)
 
 patch: "$(BUILDDIR_BIN)/$(BINNAME)$(BINEXT)"
-	"$<"
+	$<
 
 unpatch: $(ARCHIVE).backup
 	cp "$<" "$(ARCHIVE)"
