@@ -292,7 +292,7 @@ def build_sprites(fp, spritedir, builddir):
 						image.paste(sprite, box=(x, y, x + width, y + height))
 
 					# DEBUG:
-					image.save(pjoin(builddir, '%05d.png' % txtr_index))
+					# image.save(pjoin(builddir, '%05d.png' % txtr_index))
 
 					buf = BytesIO()
 					image.save(buf, format='PNG')
