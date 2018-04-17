@@ -9,6 +9,7 @@ from io import BytesIO
 from os.path import splitext, isdir, join as pjoin, abspath, dirname
 from game_maker import *
 
+REQUIRED_SPRITES = {'CUST_SPR_POOR', 'CUST_SPR_COMMON', 'CUST_SPR_RICH'}
 HOOMAN_NAMES = {}
 
 def load_names():
@@ -166,12 +167,37 @@ def build_sprites(fp, spritedir, builddir):
 					except ValueError:
 						pass
 					else:
-						replacement_sprites[(sprite_name, tpag_index)] = pjoin(subpath, filename)
+						sprite = Image.open(pjoin(subpath, filename))
+						sprite_key = sprite_name, tpag_index
+
+						hpath = '%s/%d.png' % sprite_key
+						hooman = HOOMAN_NAMES.get(hpath)
+						if hooman:
+							width, height = sprite.size
+							hname, text_y = hooman
+							avail_width = width - 4
+							tmp_img = Image.new('RGBA', sprite.size)
+							draw = ImageDraw.Draw(tmp_img)
+							lines = wrap_text(hname, avail_width, font)
+
+							text_x = 0
+							if text_y is None:
+								text_y = int(height * 0.5)
+
+							draw_lines(draw, lines, font, '#000000', text_x, text_y, width, height, 0)
+							tmp_img = tmp_img.filter(blur)
+							draw = ImageDraw.Draw(tmp_img)
+							draw_lines(draw, lines, font, '#ffffff', text_x, text_y, width, height, 0)
+
+							sprite = Image.alpha_composite(sprite, tmp_img)
+
+						replacement_sprites[sprite_key] = sprite
 
 	sprites_by_txtr = {}
 	replacement_sprites_by_txtr = {}
 	replacement_txtrs = {}
 	seen_sprt = False
+	strtbl = {}
 	while fp.tell() < end_offset:
 		head = fp.read(8)
 		magic, size = struct.unpack("<4sI", head)
@@ -193,9 +219,15 @@ def build_sprites(fp, spritedir, builddir):
 				tpag_offsets = struct.unpack('<%dI' % tpag_count, data)
 
 				strptr = sprite_record[0]
-				fp.seek(strptr - 4, 0)
-				strlen, = struct.unpack('<I', fp.read(4))
-				sprite_name = fp.read(strlen).decode()
+				if strptr in strtbl:
+					sprite_name = strtbl[strptr]
+				else:
+					fp.seek(strptr - 4, 0)
+					strlen, = struct.unpack('<I', fp.read(4))
+					sprite_name = fp.read(strlen).decode()
+					strtbl[strptr] = sprite_name
+
+				is_required = sprite_name in REQUIRED_SPRITES
 
 				for tpag_index, tpag_offset in enumerate(tpag_offsets):
 					sprite_key = (sprite_name, tpag_index)
@@ -264,35 +296,15 @@ def build_sprites(fp, spritedir, builddir):
 
 						seen_sprites.add(sprite_key)
 
-						sprite = Image.open(replacement_sprites[sprite_key])
+						sprite = replacement_sprites[sprite_key]
 						if sprite.size != (width, height):
 							raise FileFormatError("Sprite %s %d has incompatible size. PNG size: %d x %d, size in game archive: %d x %d" %
 								(sprite_name, tpag_index, sprite.size[0], sprite.size[1], width, height))
 
-						hpath = '%s/%d.png' % sprite_key
-						hooman = HOOMAN_NAMES.get(hpath)
-						if hooman:
-							hname, text_y = hooman
-							avail_width = width - 4
-							tmp_img = Image.new('RGBA', sprite.size)
-							draw = ImageDraw.Draw(tmp_img)
-							lines = wrap_text(hname, avail_width, font)
-
-							text_x = 0
-							if text_y is None:
-								text_y = int(height * 0.5)
-
-							draw_lines(draw, lines, font, '#000000', text_x, text_y, width, height, 0)
-							tmp_img = tmp_img.filter(blur)
-							draw = ImageDraw.Draw(tmp_img)
-							draw_lines(draw, lines, font, '#ffffff', text_x, text_y, width, height, 0)
-
-							sprite = Image.alpha_composite(sprite, tmp_img)
-
 						image.paste(sprite, box=(x, y, x + width, y + height))
 
 					# DEBUG:
-					# image.save(pjoin(builddir, '%05d.png' % txtr_index))
+					image.save(pjoin(builddir, '%05d.png' % txtr_index))
 
 					buf = BytesIO()
 					image.save(buf, format='PNG')
