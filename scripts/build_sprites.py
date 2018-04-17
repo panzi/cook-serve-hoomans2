@@ -3,10 +3,109 @@
 import os
 import re
 import sys
-from PIL import Image
+import csv
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from io import BytesIO
-from os.path import splitext, isdir, join as pjoin
+from os.path import splitext, isdir, join as pjoin, abspath, dirname
 from game_maker import *
+
+HOOMAN_NAMES = {}
+
+def load_names():
+	with open(pjoin(dirname(abspath(__file__)), '..', 'hoomans.csv'), 'r') as fp:
+		for row in csv.reader(fp):
+			hname = row[0].strip()
+			hpath = row[1].strip()
+			y = None
+			if len(row) > 2:
+				y = row[2].strip()
+				if y:
+					y = int(y, 10)
+			HOOMAN_NAMES[hpath] = (hname, y)
+
+load_names()
+
+def find_font(*fontfiles):
+	fontdirs = [
+		pjoin(os.getenv("HOME"), '.fonts'),
+		'/usr/share/fonts'
+	]
+	for fontfile in fontfiles:
+		fontfile_lower = fontfile.lower()
+		for fontdir in fontdirs:
+			for dirpath, dirnames, filenames in os.walk(fontdir):
+				for filename in filenames:
+					if fontfile_lower == filename.lower():
+						return pjoin(dirpath, filename)
+	raise KeyError('font not found: ' + ', '.join(fontfiles))
+
+SPLIT = re.compile(r'[-_\s+]')
+BORDER = re.compile(r'([a-zäöüß])([A-Z0-9ÄÖÜ])')
+
+def _wrap_text_reformat(text, width, font):
+	words = SPLIT.split(BORDER.sub(r'\1 \2', text))
+	lines = []
+	line = []
+	word_index = 0
+	while word_index < len(words):
+		word = words[word_index]
+		line.append(word)
+		size = font.getsize(' '.join(line))[0]
+		if size > width:
+			del line[-1]
+			if line:
+				lines.append(' '.join(line))
+				line = []
+			else:
+				start = 0
+				end = 0
+				while start < len(word):
+					for index in range(start + 1, len(word) + 1):
+						if font.getsize(word[start:index])[0] > width:
+							break
+						end = index
+					if start == end:
+						end += 1 # at least one codepoint
+					lines.append(word[start:end])
+					start = end
+				word_index += 1
+		else:
+			word_index += 1
+	if line:
+		lines.append(' '.join(line))
+	return lines
+
+def wrap_text(text, width, font):
+	text = text.strip("-_\n\r\t ")
+	words = SPLIT.split(text)
+	lines = []
+	line = []
+	word_index = 0
+	while word_index < len(words):
+		word = words[word_index]
+		line.append(word)
+		size = font.getsize(' '.join(line))[0]
+		if size > width:
+			del line[-1]
+			if line:
+				lines.append(' '.join(line))
+				line = []
+			else:
+				return _wrap_text_reformat(text, width, font)
+		else:
+			word_index += 1
+	if line:
+		lines.append(' '.join(line))
+	return lines
+
+def draw_lines(draw, lines, font, color, x, y, width, height, line_spacing):
+	for line in lines:
+		line_width, line_height = font.getsize(line)
+		if y + line_height >= height:
+			break
+		line_x = x + (width - line_width) // 2
+		draw.text((line_x, y), line, color, font)
+		y += line_height + line_spacing
 
 def escape_c_byte(c):
 	if c == 34:
@@ -30,9 +129,10 @@ def escape_c_string(s):
 	return b''.join(escape_c_byte(c) for c in s.encode()).decode()
 
 def build_sprites(fp, spritedir, builddir):
+	font = ImageFont.truetype(find_font('OpenSans_Bold.ttf', 'OpenSans_Regular.ttf', 'Arial.ttf'), 26)
+	blur = ImageFilter.GaussianBlur(2)
 	patch_def = []
 	patch_data_externs = []
-	patch_data_c = []
 
 	fp.seek(0, 2)
 	file_size = fp.tell()
@@ -169,10 +269,30 @@ def build_sprites(fp, spritedir, builddir):
 							raise FileFormatError("Sprite %s %d has incompatible size. PNG size: %d x %d, size in game archive: %d x %d" %
 								(sprite_name, tpag_index, sprite.size[0], sprite.size[1], width, height))
 
+						hpath = '%s/%d.png' % sprite_key
+						hooman = HOOMAN_NAMES.get(hpath)
+						if hooman:
+							hname, text_y = hooman
+							avail_width = width - 4
+							tmp_img = Image.new('RGBA', sprite.size)
+							draw = ImageDraw.Draw(tmp_img)
+							lines = wrap_text(hname, avail_width, font)
+
+							text_x = 0
+							if text_y is None:
+								text_y = int(height * 0.5)
+
+							draw_lines(draw, lines, font, '#000000', text_x, text_y, width, height, 0)
+							tmp_img = tmp_img.filter(blur)
+							draw = ImageDraw.Draw(tmp_img)
+							draw_lines(draw, lines, font, '#ffffff', text_x, text_y, width, height, 0)
+
+							sprite = Image.alpha_composite(sprite, tmp_img)
+
 						image.paste(sprite, box=(x, y, x + width, y + height))
 
 					# DEBUG:
-					# image.save(pjoin(builddir, '%05d.png' % txtr_index))
+					image.save(pjoin(builddir, '%05d.png' % txtr_index))
 
 					buf = BytesIO()
 					image.save(buf, format='PNG')

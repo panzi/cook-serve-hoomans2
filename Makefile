@@ -169,7 +169,7 @@ $(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET).zip: gmdump gminfo
 		utils-for-advanced-users-$(VERSION)-$(TARGET)
 	rm -r $(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET)
 
-$(BUILDDIR_SRC)/csh2_patch_def.h: $(wildcard sprites/*/*.png) scripts/build_sprites.py
+$(BUILDDIR_SRC)/csh2_patch_def.h: $(wildcard sprites/*/*.png) scripts/build_sprites.py hoomans.csv
 	scripts/build_sprites.py sprites $(BUILDDIR_SRC)
 
 $(BUILDDIR_SRC)/csh2_patch_def.c: $(BUILDDIR_SRC)/csh2_patch_def.h
