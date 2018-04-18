@@ -267,8 +267,6 @@ def build_sprites(fp, spritedir, builddir):
 									filler_stats[other_key] = filler_count + 1
 									found = True
 									filler_replacement_sprites.sort(key=lambda item: (filler_stats.get(item[0], 0), item[1].size))
-									#del filler_replacement_sprites[filler_index]
-									#filler_replacement_sprites.append(other)
 									break
 
 						if found:
