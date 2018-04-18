@@ -310,7 +310,7 @@ def build_sprites(fp, spritedir, builddir):
 				print("That makes %d filler sprites." % sum_count)
 
 			if taller_filler_count > 0:
-				print("%d time(s) a filler that is taller than the avalable slot was used." % taller_filler_count)
+				print("%d time(s) a filler that is taller than the available slot was used." % taller_filler_count)
 
 			if no_filler_count > 0:
 				print("Couldn't find fillers for %d sprite(s)." % no_filler_count)
