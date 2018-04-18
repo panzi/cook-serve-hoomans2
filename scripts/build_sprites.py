@@ -9,7 +9,7 @@ from io import BytesIO
 from os.path import splitext, isdir, join as pjoin, abspath, dirname
 from game_maker import *
 
-MAX_FILLER_COUNT = 3
+MAX_FILLER_COUNT = 4
 HOOMAN_SPRITES = {'CUST_SPR_POOR', 'CUST_SPR_COMMON', 'CUST_SPR_RICH'}
 HOOMAN_NAMES = {}
 
@@ -259,16 +259,16 @@ def build_sprites(fp, spritedir, builddir):
 						width  = rect[2]
 						height = rect[3]
 						found  = False
-						for filler_index, other in enumerate(filler_replacement_sprites):
-							other_key, other_sprite = other
+						for other_key, other_sprite in filler_replacement_sprites:
 							ow = other_sprite.size[0]
 							if ow <= width:
 								filler_count = filler_stats.get(other_key, 0)
 								if filler_count < MAX_FILLER_COUNT:
 									filler_stats[other_key] = filler_count + 1
 									found = True
-									del filler_replacement_sprites[filler_index]
-									filler_replacement_sprites.append(other)
+									filler_replacement_sprites.sort(key=lambda item: (filler_stats.get(item[0], 0), item[1].size))
+									#del filler_replacement_sprites[filler_index]
+									#filler_replacement_sprites.append(other)
 									break
 
 						if found:
@@ -297,7 +297,26 @@ def build_sprites(fp, spritedir, builddir):
 							replacement_sprites_by_txtr[txtr_index].append(sprite_info)
 						else:
 							replacement_sprites_by_txtr[txtr_index] = [sprite_info]
-					
+
+			if filler_stats:
+				filler_stats = list((count, key) for key, count in filler_stats.items())
+				filler_stats.sort()
+				print('Filler usage:')
+				sum_count = 0
+				for count, (sprite_name, tpag_index) in filler_stats:
+					sprite_path = '%s/%d.png' % (sprite_name, tpag_index)
+					hooman = HOOMAN_NAMES.get(sprite_path)
+					hname = hooman[0] if hooman else ''
+					print('%5d %-25s %s' % (count, hname, sprite_path))
+					sum_count += count
+				print("That makes %d filler sprites." % sum_count)
+
+			if taller_filler_count > 0:
+				print("%d time(s) a filler that is taller than the avalable slot was used." % taller_filler_count)
+
+			if no_filler_count > 0:
+				print("Couldn't find fillers for %d sprite(s)." % no_filler_count)
+
 		elif magic == b'TXTR':
 			if not seen_sprt:
 				raise FileFormatError("found TXTR block before found SPRT block")
@@ -357,25 +376,6 @@ def build_sprites(fp, spritedir, builddir):
 					replacement_txtrs[txtr_index] = (image.size, buf.getvalue())
 
 		fp.seek(next_offset, 0)
-
-	if filler_stats:
-		filler_stats = list((count, key) for key, count in filler_stats.items())
-		filler_stats.sort()
-		print('Filler usage:')
-		sum_count = 0
-		for count, (sprite_name, tpag_index) in filler_stats:
-			sprite_path = '%s/%d.png' % (sprite_name, tpag_index)
-			hooman = HOOMAN_NAMES.get(sprite_path)
-			hname = hooman[0] if hooman else ''
-			print('%5d %-25s %s' % (count, hname, sprite_path))
-			sum_count += count
-		print("That makes %d replacement sprites." % sum_count)
-
-	if taller_filler_count > 0:
-		print("Used %d time(s) a replacement that is taller than the avalable slot." % taller_filler_count)
-	
-	if no_filler_count > 0:
-		print("Couldn't find replacements for %d sprite(s)." % no_filler_count)
 
 	check_sprites = {}
 	for txtr_index in replacement_txtrs:
