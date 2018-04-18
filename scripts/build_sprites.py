@@ -199,7 +199,7 @@ def build_sprites(fp, spritedir, builddir):
 	no_filler_count = 0
 	filler_stats = {}
 	filler_replacement_sprites = list(item for item in replacement_sprites.items() if item[0][0] in HOOMAN_SPRITES)
-	filler_replacement_sprites.sort(key=lambda item: item[1].size)
+	filler_replacement_sprites.sort(reverse=True, key=lambda item: item[1].size)
 	sprites_by_txtr = {}
 	replacement_sprites_by_txtr = {}
 	replacement_txtrs = {}
@@ -266,7 +266,7 @@ def build_sprites(fp, spritedir, builddir):
 								if filler_count < MAX_FILLER_COUNT:
 									filler_stats[other_key] = filler_count + 1
 									found = True
-									filler_replacement_sprites.sort(key=lambda item: (filler_stats.get(item[0], 0), item[1].size))
+									filler_replacement_sprites.sort(key=lambda item: (filler_stats.get(item[0], 0), -item[1].size[0], item[1].size[1]))
 									break
 
 						if found:
