@@ -190,8 +190,7 @@ def build_sprites(fp, spritedir, builddir):
 							draw = ImageDraw.Draw(tmp_img)
 							draw_lines(draw, lines, font, '#ffffff', text_x, text_y, width, height, 0)
 
-							sprite.paste(tmp_img, (0, 0, width, height), tmp_img)
-							#sprite = Image.alpha_composite(sprite, tmp_img)
+							sprite = Image.alpha_composite(sprite, tmp_img)
 
 						replacement_sprites[sprite_key] = sprite
 
