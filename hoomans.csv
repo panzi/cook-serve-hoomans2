@@ -2,7 +2,7 @@ SplatterCat             , CUST_SPR_POOR/44.png
 rav3rgamer              , CUST_SPR_POOR/2.png
 bloody_albatross        , CUST_SPR_POOR/43.png
 urLABness               , CUST_SPR_POOR/31.png
-Vessiot                 , CUST_SPR_COMMON/67.png
+Vessiot                 , CUST_SPR_POOR/70.png
 Eric Barkman            , CUST_SPR_POOR/47.png
 Cowpeeler               , CUST_SPR_COMMON/51.png
 Pandaherbs              , CUST_SPR_POOR/34.png
@@ -17,14 +17,14 @@ ShinyPhilanthropy       , CUST_SPR_POOR/6.png
 NickAlm                 , CUST_SPR_RICH/68.png
 Iffrithiel              , CUST_SPR_POOR/65.png
 Gil Ramirez             , CUST_SPR_POOR/67.png
-irlbinky                , CUST_SPR_POOR/37.png
+IRLBinky                , CUST_SPR_POOR/37.png
 Toronto Gal             , CUST_SPR_POOR/17.png
 AdoraBrooke             , CUST_SPR_POOR/3.png
 Garuda x17              , CUST_SPR_POOR/38.png  , 150
 TheMarvelousHunt        , CUST_SPR_POOR/16.png
 Paladin356              , CUST_SPR_POOR/61.png
 Cantwhistle             , CUST_SPR_POOR/62.png
-TimidBunny              , CUST_SPR_POOR/9.png   , 180
+TimidBunny              , CUST_SPR_COMMON/7.png , 140
 Gigglebites             , CUST_SPR_POOR/18.png
 Thrace                  , CUST_SPR_POOR/66.png
 AngryWelshGamer         , CUST_SPR_POOR/42.png
@@ -43,7 +43,7 @@ Miranda Peloquin        , CUST_SPR_POOR/22.png
 TopHatSammy             , CUST_SPR_POOR/13.png
 CaptDaf                 , CUST_SPR_POOR/71.png
 leliboli                , CUST_SPR_POOR/27.png
-cRandyGamble            , CUST_SPR_POOR/70.png
+cRandyGamble            , CUST_SPR_RICH/72.png
 milagasud               , CUST_SPR_POOR/15.png
 DrBlumenthal            , CUST_SPR_POOR/40.png
 Liangelus               , CUST_SPR_POOR/33.png
@@ -64,7 +64,7 @@ Michelle Wavrick        , CUST_SPR_POOR/25.png
 Mcs0083                 , CUST_SPR_POOR/39.png
 DRCroston               , CUST_SPR_POOR/36.png
 Bensmith999             , CUST_SPR_POOR/48.png
-sarahthepearl           , CUST_SPR_COMMON/31.png
+SarahThePearl           , CUST_SPR_RICH/32.png
 sarahbabe               , CUST_SPR_COMMON/34.png
 inbntly                 , CUST_SPR_COMMON/44.png
 Ryon Day                , CUST_SPR_POOR/52.png
@@ -83,3 +83,6 @@ UTDevilDog              , CUST_SPR_COMMON/46.png
 Bloodious               , CUST_SPR_POOR/72.png
 Blair Beveridge         , CUST_SPR_COMMON/68.png
 nebbishHeretic          , CUST_SPR_COMMON/42.png
+Skyshadow3246           , CUST_SPR_COMMON/31.png
+Cole Weathers           , CUST_SPR_POOR/64.png
+Christine Kirby         , CUST_SPR_POOR/9.png   , 160
