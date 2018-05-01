@@ -364,6 +364,7 @@ def build_sprites(fp, spritedir, builddir):
 						raise FileFormatError("PNG file at offset %d overflows TXTR data section end" % offset)
 
 					if txtr_index in replacement_sprites_by_txtr:
+						print("generate TXTR %d" % txtr_index)
 						sprites = replacement_sprites_by_txtr[txtr_index]
 						fp.seek(offset, 0)
 						data = fp.read(info.filesize)
