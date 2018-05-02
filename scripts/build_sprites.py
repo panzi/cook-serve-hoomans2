@@ -222,7 +222,7 @@ def build_sprites(fp, spritedir, builddir):
 	replacement_txtrs = {}
 	seen_sprt = False
 	strtbl = {}
-	with timing("read game archive", inline=False):
+	with timing("read game archive and generate TXTRs", inline=False):
 		while fp.tell() < end_offset:
 			head = fp.read(8)
 			magic, size = struct.unpack("<4sI", head)
