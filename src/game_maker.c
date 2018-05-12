@@ -1254,18 +1254,35 @@ struct gm_patch_buf {
 	size_t size;
 };
 
+static void gm_patch_buf_cleanup(struct gm_patch_buf *pbuf) {
+	if (pbuf->patches) {
+		for (struct gm_patch *patch = pbuf->patches; patch->section != GM_END; ++ patch) {
+			if (patch->src.filename) {
+				free((void*)patch->src.filename);
+				patch->src.filename = NULL;
+			}
+		}
+		free(pbuf->patches);
+		pbuf->patches = NULL;
+	}
+}
+
 static int gm_patch_scan_dir(struct gm_patch_buf *pbuf, const char *dirname, const char *subdirname, const char *exts[],
                              int read_info(FILE *fp, struct gm_patch *patch)) {
-	char namebuf[PATH_MAX];
+	char *namebuf = NULL;
 	DIR *dir = NULL;
 	int status = 0;
 
-	if (GM_JOIN_PATH(namebuf, sizeof(namebuf), dirname, subdirname) != 0) {
+	namebuf = GM_JOIN_PATH_EX(dirname, subdirname);
+	if (namebuf == NULL) {
 		perror("listing files");
 		goto error;
 	}
 
 	dir = opendir(namebuf);
+	free(namebuf);
+	namebuf = NULL;
+
 	if (dir) {
 		for (;;) {
 			if (pbuf->size + 1 == pbuf->capacity) {
@@ -1294,11 +1311,6 @@ static int gm_patch_scan_dir(struct gm_patch_buf *pbuf, const char *dirname, con
 				break;
 			}
 
-			if (GM_JOIN_PATH(namebuf, sizeof(namebuf), dirname, subdirname, entry->d_name) != 0) {
-				perror("listing files");
-				goto error;
-			}
-
 			char *endptr = NULL;
 			long int index = strtol(entry->d_name, &endptr, 10);
 			bool ext_matches = false;
@@ -1314,25 +1326,24 @@ static int gm_patch_scan_dir(struct gm_patch_buf *pbuf, const char *dirname, con
 				continue;
 			}
 
-			char *filename = strdup(namebuf);
-			if (!filename) {
-				perror(namebuf);
-				goto error;
-			}
-
 			struct gm_patch *patch = &pbuf->patches[pbuf->size];
 			patch->index        = index;
 			patch->patch_src    = GM_SRC_FILE;
-			patch->src.filename = filename;
+			patch->src.filename = GM_JOIN_PATH_EX(dirname, subdirname, entry->d_name);
 
-			FILE *fp = fopen(namebuf, "rb");
+			if (patch->src.filename == NULL) {
+				perror("listing files");
+				goto error;
+			}
+
+			FILE *fp = fopen(patch->src.filename, "rb");
 			if (!fp) {
-				perror(namebuf);
+				perror(patch->src.filename);
 				goto error;
 			}
 
 			if (read_info(fp, patch) != 0) {
-				perror(namebuf);
+				perror(patch->src.filename);
 				fclose(fp);
 				goto error;
 			}
@@ -1351,7 +1362,14 @@ static int gm_patch_scan_dir(struct gm_patch_buf *pbuf, const char *dirname, con
 error:
 	status = -1;
 
+	gm_patch_buf_cleanup(pbuf);
+
 end:
+	if (namebuf) {
+		free(namebuf);
+		namebuf = NULL;
+	}
+
 	if (dir) {
 		closedir(dir);
 		dir = NULL;
@@ -1438,16 +1456,7 @@ error:
 	status = -1;
 
 end:
-	if (pbuf.patches) {
-		for (struct gm_patch *patch = pbuf.patches; patch->section != GM_END; ++ patch) {
-			if (patch->src.filename) {
-				free((void*)patch->src.filename);
-				patch->src.filename = NULL;
-			}
-		}
-		free(pbuf.patches);
-		pbuf.patches = NULL;
-	}
+	gm_patch_buf_cleanup(&pbuf);
 
 	return status;
 }
@@ -1470,8 +1479,15 @@ const char *gm_typename(enum gm_filetype type) {
 	}
 }
 
+// GM_LEN(SIZE_MAX) actually might give a bit more than the number of
+// digits in SIZE_MAX plus one (for the nil byte), because the number
+// it resolves to might have UL appended and might be in parenthesis.
+#define GM_STR(X) #X
+#define GM_LEN(X) sizeof(GM_STR(X))
+
 int gm_dump_files(const struct gm_index *index, FILE *game, const char *outdir) {
-	char buf[PATH_MAX];
+	char *subdir = NULL;
+	int status = 0;
 
 	for (; index->section != GM_END; ++ index) {
 		const char *dir = NULL;
@@ -1489,50 +1505,70 @@ int gm_dump_files(const struct gm_index *index, FILE *game, const char *outdir) 
 			continue;
 		}
 
-		if (GM_JOIN_PATH(buf, sizeof(buf), outdir, dir) != 0) {
-			return -1;
+
+		subdir = GM_JOIN_PATH_EX(outdir, dir);
+		if (subdir == NULL) {
+			goto error;
 		}
 
-		if (gm_mkpath(buf) != 0) {
-			return -1;
+		if (gm_mkpath(subdir) != 0) {
+			goto error;
 		}
 
 		for (size_t i = 0; i < index->entry_count; ++ i) {
+			char filename[GM_LEN(SIZE_MAX) + 4];
 			const struct gm_entry *entry = &index->entries[i];
 			const char *ext = gm_extension(entry->type);
-			int count = snprintf(buf, sizeof(buf), "%s%c%s%c%04" PRIuPTR "%s",
-			                     outdir, GM_PATH_SEP, dir, GM_PATH_SEP, i, ext);
+			int count = snprintf(filename, sizeof(filename), "%04" PRIuPTR "%s", i, ext);
 
 			if (count < 0) {
-				return -1;
+				goto error;
 			}
-			else if ((size_t)count >= sizeof(buf)) {
-				LOG_ERR("Name too long: %s%c%s%c%04" PRIuPTR "%s",
-				        outdir, GM_PATH_SEP, dir, GM_PATH_SEP, i, ext);
+			else if ((size_t)count >= sizeof(filename)) {
+				LOG_ERR("Name too long: %s%c%04" PRIuPTR "%s",
+				        subdir, GM_PATH_SEP, i, ext);
 
 				errno = ENAMETOOLONG;
-				return -1;
+				goto error;
 			}
 
-			puts(buf);
+			char *filepath = GM_JOIN_PATH_EX(subdir, filename);
+			if (filepath == NULL) {
+				goto error;
+			}
 
-			FILE *fp = fopen(buf, "wb");
+			puts(filepath);
+
+			FILE *fp = fopen(filepath, "wb");
+			free(filepath);
+
 			if (!fp) {
-				return -1;
+				goto error;
 			}
 
 			if (gm_copydata(game, entry->offset, fp, 0, entry->size) != 0) {
 				fclose(fp);
-				return -1;
+				goto error;
 			}
 
 			if (fclose(fp) != 0) {
-				return -1;
+				goto error;
 			}
 		}
 	}
 
-	return 0;
+	goto end;
+
+error:
+	status = -1;
+
+end:
+	if (subdir) {
+		free(subdir);
+		subdir = NULL;
+	}
+
+	return status;
 }
 
 int gm_concat(char *buf, size_t size, const char *strs[], size_t nstrs) {

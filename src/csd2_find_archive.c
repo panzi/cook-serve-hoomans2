@@ -69,7 +69,7 @@ end:
 
 char *csd2_find_archive() {
 	static const struct reg_path reg_paths[] = {
-		// Have confirmed sigthings of these keys:
+		// Have confirmed sightings of these keys:
 		{ HKEY_LOCAL_MACHINE, TEXT("Software\\Valve\\Steam"),              TEXT("InstallPath") },
 		{ HKEY_LOCAL_MACHINE, TEXT("Software\\Wow6432node\\Valve\\Steam"), TEXT("InstallPath") },
 		{ HKEY_CURRENT_USER,  TEXT("Software\\Valve\\Steam"),              TEXT("SteamPath")   },

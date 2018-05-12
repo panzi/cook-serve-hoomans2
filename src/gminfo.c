@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 	}
 	else {
 		pathbuf = csd2_find_archive();
-		if (pathbuf != NULL) {
+		if (pathbuf == NULL) {
 			fprintf(stderr, "*** ERROR: Couldn't find %s file.\n", CSH2_GAME_ARCHIVE);
 			goto error;
 		}
