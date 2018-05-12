@@ -158,20 +158,21 @@ static char *find_path_ignore_case(const char *prefix, const char* const path[])
 			else {
 				perror(filepath);
 				free(filepath);
+				closedir(dir);
 				return NULL;
 			}
 		}
 
 		if (!realname) {
-			closedir(dir);
 			free(filepath);
+			closedir(dir);
 			errno = ENOENT;
 			return NULL;
 		}
 
-		closedir(dir);
-
 		char *nextpath = GM_JOIN_PATH_EX(filepath, realname);
+
+		closedir(dir);
 		free(filepath);
 
 		if (nextpath == NULL) {

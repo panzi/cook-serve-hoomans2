@@ -1592,6 +1592,8 @@ char *gm_concat_ex(const char *strs[], size_t nstrs) {
 		ch_index += strsize;
 	}
 
+	buf[ch_index] = '\0';
+
 	return buf;
 }
 
@@ -1636,7 +1638,6 @@ int gm_join_path(char *buf, size_t size, const char *comps[], size_t ncomps) {
 
 char *gm_join_path_ex(const char *comps[], size_t ncomps) {
 	size_t size = 1;
-	bool first = true;
 	char *path = NULL;
 	size_t ch_index = 0;
 
@@ -1644,7 +1645,7 @@ char *gm_join_path_ex(const char *comps[], size_t ncomps) {
 		const char *comp = comps[comp_index];
 		size_t complen = strlen(comp);
 
-		if (!first) {
+		if (comp_index != 0) {
 			if (complen > SIZE_MAX - 1) {
 				errno = ENAMETOOLONG;
 				return NULL;
@@ -1668,10 +1669,7 @@ char *gm_join_path_ex(const char *comps[], size_t ncomps) {
 	for (size_t comp_index = 0; comp_index < ncomps; ++ comp_index) {
 		const char *comp = comps[comp_index];
 
-		if (first) {
-			first = false;
-		}
-		else {
+		if (comp_index != 0) {
 			path[ch_index] = GM_PATH_SEP;
 			++ ch_index;
 		}
