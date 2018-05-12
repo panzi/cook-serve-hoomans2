@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]) {
 	int status = 0;
@@ -12,7 +13,7 @@ int main(int argc, char *argv[]) {
 	struct gm_index *index = NULL;
 	const char *outdir = ".";
 	const char *gamename = NULL;
-	char pathbuf[PATH_MAX];
+	char *pathbuf = NULL;
 
 	if (argc > 3) {
 		fprintf(stderr, "*** usage: %s [archive] [outdir]\n", argv[0]);
@@ -36,7 +37,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (gamename == NULL) {
-		if (csd2_find_archive(pathbuf, PATH_MAX) < 0) {
+		pathbuf = csd2_find_archive();
+		if (pathbuf != NULL) {
 			fprintf(stderr, "*** ERROR: Couldn't find %s file.\n", CSH2_GAME_ARCHIVE);
 			goto error;
 		}
@@ -71,6 +73,11 @@ error:
 	status = 1;
 
 end:
+	if (pathbuf) {
+		free(pathbuf);
+		pathbuf = NULL;
+	}
+
 	if (game) {
 		fclose(game);
 		game = NULL;

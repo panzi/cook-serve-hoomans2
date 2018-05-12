@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <stdlib.h>
 
 static void gm_print_info(const struct gm_index *index, FILE *out) {
 	fprintf(out, "Offset       Size             Type      Index Info\n");
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
 	FILE *game = NULL;
 	struct gm_index *index = NULL;
 	const char *gamename = NULL;
-	char pathbuf[PATH_MAX];
+	char *pathbuf = NULL;
 
 	if (argc > 2) {
 		fprintf(stderr, "*** usage: %s [archive]\n", argv[0]);
@@ -58,7 +59,8 @@ int main(int argc, char *argv[]) {
 		gamename = argv[1];
 	}
 	else {
-		if (csd2_find_archive(pathbuf, PATH_MAX) < 0) {
+		pathbuf = csd2_find_archive();
+		if (pathbuf != NULL) {
 			fprintf(stderr, "*** ERROR: Couldn't find %s file.\n", CSH2_GAME_ARCHIVE);
 			goto error;
 		}
@@ -86,6 +88,11 @@ error:
 	status = 1;
 
 end:
+	if (pathbuf) {
+		free(pathbuf);
+		pathbuf = NULL;
+	}
+
 	if (game) {
 		fclose(game);
 		game = NULL;

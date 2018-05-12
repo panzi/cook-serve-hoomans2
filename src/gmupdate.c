@@ -7,12 +7,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]) {
 	int status = 0;
 	const char *indir = ".";
 	const char *gamename = NULL;
-	char pathbuf[PATH_MAX];
+	char *pathbuf = NULL;
 
 	if (argc > 3) {
 		fprintf(stderr, "*** usage: %s [archive] [dir]\n", argv[0]);
@@ -36,7 +37,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (gamename == NULL) {
-		if (csd2_find_archive(pathbuf, PATH_MAX) < 0) {
+		pathbuf = csd2_find_archive();
+		if (pathbuf != NULL) {
 			fprintf(stderr, "*** ERROR: Couldn't find %s file.\n", CSH2_GAME_ARCHIVE);
 			goto error;
 		}
@@ -58,6 +60,10 @@ error:
 	status = 1;
 
 end:
+	if (pathbuf) {
+		free(pathbuf);
+		pathbuf = NULL;
+	}
 
 #ifdef GM_WINDOWS
 	printf("Press ENTER to continue...");

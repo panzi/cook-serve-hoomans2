@@ -118,8 +118,8 @@ end:
 #endif
 
 int main(int argc, char *argv[]) {
-	char game_name_buf[PATH_MAX];
-	char backup_name[PATH_MAX];
+	char *game_name_buf = NULL;
+	char *backup_name = NULL;
 	int status = EXIT_SUCCESS;
 	const char *game_name = NULL;
 	struct stat st;
@@ -132,7 +132,8 @@ int main(int argc, char *argv[]) {
 		game_name = argv[1];
 	}
 	else {
-		if (csd2_find_archive(game_name_buf, PATH_MAX) < 0) {
+		game_name_buf = csd2_find_archive();
+		if (game_name_buf == NULL) {
 			fprintf(stderr, "*** ERROR: Couldn't find %s file.\n", CSH2_GAME_ARCHIVE);
 			goto error;
 		}
@@ -142,8 +143,8 @@ int main(int argc, char *argv[]) {
 	printf("Found game archive: %s\n", game_name);
 
 	// create backup if there isn't one
-	if (GM_CONCAT(backup_name, sizeof(backup_name), game_name, ".backup") != 0) {
-		errno = ENAMETOOLONG;
+	backup_name = GM_CONCAT_EX(game_name, ".backup");
+	if (backup_name == NULL) {
 		perror("*** ERROR: creatig backup file name");
 		goto error;
 	}
@@ -186,6 +187,15 @@ error:
 	status = EXIT_FAILURE;
 
 end:
+	if (game_name_buf != NULL) {
+		free(game_name_buf);
+		game_name_buf = NULL;
+	}
+
+	if (backup_name != NULL) {
+		free(backup_name);
+		backup_name = NULL;
+	}
 
 #ifdef GM_WINDOWS
 	printf("Press ENTER to continue...");

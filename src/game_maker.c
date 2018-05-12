@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #define U32LE_FROM_BUF(BUF) ( \
 	 (uint32_t)((BUF)[0])        | \
@@ -79,31 +80,28 @@ static int gm_copydata(FILE *src, off_t srcoff, FILE *dst, off_t dstoff, size_t 
 }
 
 static int gm_mkpath(const char *pathname) {
-	char buf[PATH_MAX];
+	char *buf = NULL;
 	struct stat st;
+	int status = 0;
 
 	if (!pathname) {
 		LOG_ERR_MSG("pathname cannot be NULL");
 
 		errno = EINVAL;
-		return -1;
+		goto error;
 	}
 
 	if (!*pathname) {
 		LOG_ERR_MSG("pathname cannot be empty");
 
 		errno = EINVAL;
-		return -1;
+		goto error;
 	}
 
-	if (strlen(pathname) >= sizeof(buf)) {
-		LOG_ERR("pathname too long: %s", pathname);
-
-		errno = ENAMETOOLONG;
-		return -1;
+	buf = strdup(pathname);
+	if (buf == NULL) {
+		goto error;
 	}
-
-	strncpy(buf, pathname, sizeof(buf));
 
 	char *ptr = buf;
 
@@ -144,21 +142,31 @@ static int gm_mkpath(const char *pathname) {
 				LOG_ERR("exists but is not a directory: %s", buf);
 
 				errno = ENOTDIR;
-				return -1;
+				goto error;
 			}
 		}
 		else if (errno != ENOENT) {
-			return -1;
+			goto error;
 		}
 		else if (mkdir(buf, S_IRWXU) != 0) {
-			return -1;
+			goto error;
 		}
 
 		*ptr = ch;
 		if (!ch) break;
 	}
 
-	return 0;
+	goto end;
+
+error:
+	status = -1;
+
+end:
+	if (buf != NULL) {
+		free(buf);
+	}
+
+	return status;
 }
 
 static int gm_write_patch_data(FILE *fp, const struct gm_patch *patch) {
@@ -1004,16 +1012,15 @@ size_t gm_index_length(const struct gm_index *index) {
 }
 
 int gm_patch_archive(const char *filename, const struct gm_patch *patches) {
-	char tmpname[PATH_MAX];
+	char *tmpname = NULL;
 	FILE *game = NULL;
 	FILE *tmp  = NULL;
 	struct gm_index *index           = NULL;
 	struct gm_patched_index *patched = NULL;
 	int status = 0;
 
-	memset(tmpname, 0, sizeof(tmpname));
-	if (GM_CONCAT(tmpname, sizeof(tmpname), filename, ".tmp") != 0) {
-		errno = ENAMETOOLONG;
+	tmpname = GM_CONCAT_EX(filename, ".tmp");
+	if (tmpname == NULL) {
 		goto error;
 	}
 
@@ -1222,6 +1229,11 @@ error:
 	errno = errnum;
 
 end:
+
+	if (tmpname) {
+		free(tmpname);
+		tmpname = NULL;
+	}
 
 	if (index) {
 		gm_free_index(index);
@@ -1549,6 +1561,40 @@ int gm_concat(char *buf, size_t size, const char *strs[], size_t nstrs) {
 	return 0;
 }
 
+char *gm_concat_ex(const char *strs[], size_t nstrs) {
+	size_t size = 1;
+	char *buf = NULL;
+	size_t ch_index = 0;
+
+	for (size_t strs_index = 0; strs_index < nstrs; ++ strs_index) {
+		const char *str = strs[strs_index];
+
+		size_t strsize = strlen(str);
+		if (size > SIZE_MAX - strsize) {
+			errno = EINVAL;
+			return NULL;
+		}
+
+		size += strsize;
+	}
+
+	buf = malloc(size);
+	if (buf == NULL) {
+		return NULL;
+	}
+
+	for (size_t strs_index = 0; strs_index < nstrs; ++ strs_index) {
+		const char *str = strs[strs_index];
+
+		size_t strsize = strlen(str);
+
+		memcpy(buf + ch_index, str, strsize);
+		ch_index += strsize;
+	}
+
+	return buf;
+}
+
 int gm_join_path(char *buf, size_t size, const char *comps[], size_t ncomps) {
 	size_t ch_index = 0;
 	bool first = true;
@@ -1586,4 +1632,57 @@ int gm_join_path(char *buf, size_t size, const char *comps[], size_t ncomps) {
 	buf[ch_index] = '\0';
 
 	return 0;
+}
+
+char *gm_join_path_ex(const char *comps[], size_t ncomps) {
+	size_t size = 1;
+	bool first = true;
+	char *path = NULL;
+	size_t ch_index = 0;
+
+	for (size_t comp_index = 0; comp_index < ncomps; ++ comp_index) {
+		const char *comp = comps[comp_index];
+		size_t complen = strlen(comp);
+
+		if (!first) {
+			if (complen > SIZE_MAX - 1) {
+				errno = ENAMETOOLONG;
+				return NULL;
+			}
+			complen += 1;
+		}
+
+		if (size > SIZE_MAX - complen) {
+			errno = ENAMETOOLONG;
+			return NULL;
+		}
+
+		size += complen;
+	}
+
+	path = malloc(size);
+	if (path == NULL) {
+		return NULL;
+	}
+
+	for (size_t comp_index = 0; comp_index < ncomps; ++ comp_index) {
+		const char *comp = comps[comp_index];
+
+		if (first) {
+			first = false;
+		}
+		else {
+			path[ch_index] = GM_PATH_SEP;
+			++ ch_index;
+		}
+
+		size_t complen = strlen(comp);
+
+		memcpy(path + ch_index, comp, complen);
+		ch_index += complen;
+	}
+
+	path[ch_index] = '\0';
+
+	return path;
 }

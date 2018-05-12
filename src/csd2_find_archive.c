@@ -1,4 +1,5 @@
 #include "csd2_find_archive.h"
+#include "game_maker.h"
 
 #include <stdio.h>
 #include <errno.h>
@@ -18,39 +19,46 @@ struct reg_path {
 	LPCTSTR lpValueName;
 };
 
-static int get_path_from_registry(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, char *path, size_t pathlen) {
+static char *get_path_from_registry(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName) {
 	HKEY hSubKey = 0;
 	DWORD dwType = REG_SZ;
-	DWORD dwSize = pathlen;
-
-	if (pathlen < sizeof(CSH2_DATA_WIN_PATH)) {
-		return ENAMETOOLONG;
-	}
+	DWORD dwSize = 0;
+	char *path = NULL;
 
 	if (RegOpenKeyEx(hKey, lpSubKey, 0, KEY_QUERY_VALUE, &hSubKey) != ERROR_SUCCESS) {
-		return ENOENT;
+		goto error;
 	}
 
-	if (RegQueryValueEx(hSubKey, lpValueName, NULL, &dwType, (LPBYTE)path, &dwSize) != ERROR_SUCCESS) {
+	if (RegQueryValueEx(hSubKey, lpValueName, NULL, &dwType, (LPBYTE)NULL, &dwSize) != ERROR_SUCCESS || dwType != REG_SZ) {
+		goto error;
+	}
+
+	path = malloc(dwSize + 1);
+	if (path == NULL) {
+		goto error;
+	}
+
+	if (RegQueryValueEx(hSubKey, lpValueName, NULL, &dwType, (LPBYTE)path, &dwSize) != ERROR_SUCCESS || dwType != REG_SZ) {
+		goto error;
+	}
+
+	goto end;
+
+error:
+	if (path != NULL) {
+		free(path);
+		path = NULL;
+	}
+
+end:
+	if (hSubKey != 0) {
 		RegCloseKey(hSubKey);
-		return ENOENT;
 	}
 
-	RegCloseKey(hSubKey);
-
-	if (dwType != REG_SZ) {
-		return ENOENT;
-	}
-	else if (dwSize > pathlen - sizeof(CSH2_DATA_WIN_PATH)) {
-		return ENAMETOOLONG;
-	}
-
-	strcat(path, CSH2_DATA_WIN_PATH);
-
-	return 0;
+	return path;
 }
 
-int csd2_find_archive(char *path, size_t pathlen) {
+char *csd2_find_archive() {
 	static const struct reg_path reg_paths[] = {
 		// Have confirmed sigthings of these keys:
 		{ HKEY_LOCAL_MACHINE, TEXT("Software\\Valve\\Steam"),              TEXT("InstallPath") },
@@ -67,83 +75,72 @@ int csd2_find_archive(char *path, size_t pathlen) {
 	};
 
 	for (const struct reg_path* reg_path = reg_paths; reg_path->lpSubKey; ++ reg_path) {
-		int errnum = get_path_from_registry(reg_path->hKey, reg_path->lpSubKey, reg_path->lpValueName, path, pathlen);
-		if (errnum == 0) {
-			return 0;
-		}
-		else if (errnum != ENOENT) {
-			errno = errnum;
-			return -1;
+		char *path = get_path_from_registry(reg_path->hKey, reg_path->lpSubKey, reg_path->lpValueName);
+		if (path != NULL) {
+			return path;
 		}
 	}
 
 	errno = ENOENT;
-	return -1;
+	return NULL;
 }
 #elif defined(__APPLE__)
 
 #define CSD_STEAM_ARCHIVE "Library/Application Support/Steam/SteamApps/common/CookServeDelicious2/Cook Serve Delicious 2.app/Contents/Resources/game.ios"
 #define CSD_APP_ARCHIVE   "/Applications/Cook Serve Delicious 2.app/Contents/Resources/game.ios"
 
-int csd2_find_archive(char *path, size_t pathlen) {
+char *csd2_find_archive() {
 	const char *home = getenv("HOME");
 	struct stat info;
 
-	if (!home) {
-		return -1;
-	}
-
-	if (GM_JOIN_PATH(path, pathlen, home, CSD_STEAM_ARCHIVE) == 0) {
-		if (stat(path, &info) < 0) {
-			if (errno != ENOENT) {
-				perror(path);
+	if (home) {
+		char *path = GM_JOIN_PATH_EX(home, CSD_STEAM_ARCHIVE);
+		if (path != NULL) {
+			if (stat(path, &info) < 0) {
+				if (errno != ENOENT) {
+					perror(path);
+				}
 			}
-		}
-		else if (S_ISREG(info.st_mode)) {
-			return 0;
+			else if (S_ISREG(info.st_mode)) {
+				return path;
+			}
+			free(path);
 		}
 	}
 
 	if (stat(CSD_APP_ARCHIVE, &info) < 0) {
 		if (errno != ENOENT) {
-			perror(path);
+			perror(CSD_APP_ARCHIVE);
 		}
-		return -1;
+		return NULL;
 	}
 	else if (S_ISREG(info.st_mode)) {
-		if (strlen(CSD_APP_ARCHIVE) + 1 > pathlen) {
-			errno = ENAMETOOLONG;
-			return -1;
-		}
-		strcpy(path, CSD_APP_ARCHIVE);
-		return 0;
+		return strdup(CSD_APP_ARCHIVE);
 	}
 
 	errno = ENOENT;
-	return -1;
+	return NULL;
 }
 #else // default: Linux
 #include <dirent.h>
 
-static int find_path_ignore_case(const char *home, const char *prefix, const char* const path[], char buf[], size_t size) {
-	int count = snprintf(buf, size, "%s/%s", home, prefix);
-	if (count < 0) {
-		return -1;
-	}
-	else if ((size_t)count >= size) {
-		errno = ENAMETOOLONG;
-		return -1;
+static char *find_path_ignore_case(const char *prefix, const char* const path[]) {
+	char *filepath = strdup(prefix);
+
+	if (filepath == NULL) {
+		return NULL;
 	}
 
 	for (const char* const* nameptr = path; *nameptr; ++ nameptr) {
 		const char* realname = NULL;
-		DIR *dir = opendir(buf);
+		DIR *dir = opendir(filepath);
 
 		if (!dir) {
 			if (errno != ENOENT) {
-				perror(buf);
+				perror(filepath);
 			}
-			return -1;
+			free(filepath);
+			return NULL;
 		}
 
 		for (;;) {
@@ -159,32 +156,35 @@ static int find_path_ignore_case(const char *home, const char *prefix, const cha
 				break; // end of dir
 			}
 			else {
-				perror(buf);
-				return -1;
+				perror(filepath);
+				free(filepath);
+				return NULL;
 			}
 		}
 
 		if (!realname) {
 			closedir(dir);
+			free(filepath);
 			errno = ENOENT;
-			return -1;
+			return NULL;
 		}
-
-		if (strlen(buf) + strlen(realname) + 2 > size) {
-			errno = ENAMETOOLONG;
-			return -1;
-		}
-
-		strcat(buf, "/");
-		strcat(buf, realname);
 
 		closedir(dir);
+
+		char *nextpath = GM_JOIN_PATH_EX(filepath, realname);
+		free(filepath);
+
+		if (nextpath == NULL) {
+			return NULL;
+		}
+
+		filepath = nextpath;
 	}
 
-	return 0;
+	return filepath;
 }
 
-int csd2_find_archive(char *path, size_t pathlen) {
+char *csd2_find_archive() {
 	// Steam was developed for Windows, which has case insenstive file names.
 	// Therefore I can't assume a certain case and because I don't want to write
 	// a parser for registry.vdf I scan the filesystem for certain names in a case
@@ -196,12 +196,14 @@ int csd2_find_archive(char *path, size_t pathlen) {
 	const char *home = getenv("HOME");
 
 	if (!home) {
-		return -1;
+		errno = ENOENT;
+		return NULL;
 	}
 
 	for (const char* const* const* ptr = paths; ptr; ++ ptr) {
 		const char* const* path_spec = *ptr;
-		if (find_path_ignore_case(home, path_spec[0], path_spec + 1, path, pathlen) == 0) {
+		char *path = find_path_ignore_case(home, path_spec);
+		if (path != NULL) {
 			struct stat info;
 
 			if (stat(path, &info) < 0) {
@@ -210,12 +212,13 @@ int csd2_find_archive(char *path, size_t pathlen) {
 				}
 			}
 			else if (S_ISREG(info.st_mode)) {
-				return 0;
+				return path;
 			}
+			free(path);
 		}
 	}
 
 	errno = ENOENT;
-	return -1;
+	return NULL;
 }
 #endif

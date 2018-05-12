@@ -16,7 +16,7 @@ extern "C" {
 #	define CSH2_GAME_ARCHIVE "game.unx"
 #endif
 
-int csd2_find_archive(char *path, size_t pathlen);
+char *csd2_find_archive();
 
 #ifdef __cplusplus
 }

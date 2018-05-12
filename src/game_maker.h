@@ -184,15 +184,27 @@ size_t                   gm_form_size(const struct gm_patched_index *index);
 int                      gm_write_hdr(FILE *fp, const uint8_t *magic, size_t size);
 int                      gm_dump_files(const struct gm_index *index, FILE *game, const char *outdir);
 int                      gm_concat(char *buf, size_t size, const char *strs[], size_t nstrs);
+char                    *gm_concat_ex(const char *strs[], size_t nstrs);
 int                      gm_join_path(char *buf, size_t size, const char *comps[], size_t ncomps);
+char                    *gm_join_path_ex(const char *comps[], size_t ncomps);
 
 #define GM_CONCAT(BUF, SIZE, ...) \
 	gm_concat((BUF), (SIZE), \
 		(const char *[]){ __VA_ARGS__ }, \
 		sizeof((const char *[]){ __VA_ARGS__ }) / sizeof(char*))
 
+#define GM_CONCAT_EX(...) \
+	gm_concat_ex( \
+		(const char *[]){ __VA_ARGS__ }, \
+		sizeof((const char *[]){ __VA_ARGS__ }) / sizeof(char*))
+
 #define GM_JOIN_PATH(BUF, SIZE, ...) \
 	gm_join_path((BUF), (SIZE), \
+		(const char *[]){ __VA_ARGS__ }, \
+		sizeof((const char *[]){ __VA_ARGS__ }) / sizeof(char*))
+
+#define GM_JOIN_PATH_EX(...) \
+	gm_join_path_ex( \
 		(const char *[]){ __VA_ARGS__ }, \
 		sizeof((const char *[]){ __VA_ARGS__ }) / sizeof(char*))
 
