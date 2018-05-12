@@ -33,7 +33,16 @@ static char *get_path_from_registry(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValue
 		goto error;
 	}
 
-	path = malloc(dwSize + 1);
+	if (dwSize == SIZE_MAX) {
+		errno = ENAMETOOLONG;
+		goto error;
+	}
+
+	// The value might or might not have a terminating '\0'.
+	// This way I ensure it really always has.
+	dwSize += 1;
+
+	path = calloc(dwSize, 1);
 	if (path == NULL) {
 		goto error;
 	}
