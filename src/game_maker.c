@@ -1019,7 +1019,7 @@ int gm_patch_archive(const char *filename, const struct gm_patch *patches) {
 	struct gm_patched_index *patched = NULL;
 	int status = 0;
 
-	tmpname = GM_CONCAT_EX(filename, ".tmp");
+	tmpname = GM_CONCAT(filename, ".tmp");
 	if (tmpname == NULL) {
 		goto error;
 	}
@@ -1273,7 +1273,7 @@ static int gm_patch_scan_dir(struct gm_patch_buf *pbuf, const char *dirname, con
 	DIR *dir = NULL;
 	int status = 0;
 
-	namebuf = GM_JOIN_PATH_EX(dirname, subdirname);
+	namebuf = GM_JOIN_PATH(dirname, subdirname);
 	if (namebuf == NULL) {
 		perror("listing files");
 		goto error;
@@ -1329,7 +1329,7 @@ static int gm_patch_scan_dir(struct gm_patch_buf *pbuf, const char *dirname, con
 			struct gm_patch *patch = &pbuf->patches[pbuf->size];
 			patch->index        = index;
 			patch->patch_src    = GM_SRC_FILE;
-			patch->src.filename = GM_JOIN_PATH_EX(dirname, subdirname, entry->d_name);
+			patch->src.filename = GM_JOIN_PATH(dirname, subdirname, entry->d_name);
 
 			if (patch->src.filename == NULL) {
 				perror("listing files");
@@ -1506,7 +1506,7 @@ int gm_dump_files(const struct gm_index *index, FILE *game, const char *outdir) 
 		}
 
 
-		subdir = GM_JOIN_PATH_EX(outdir, dir);
+		subdir = GM_JOIN_PATH(outdir, dir);
 		if (subdir == NULL) {
 			goto error;
 		}
@@ -1532,7 +1532,7 @@ int gm_dump_files(const struct gm_index *index, FILE *game, const char *outdir) 
 				goto error;
 			}
 
-			char *filepath = GM_JOIN_PATH_EX(subdir, filename);
+			char *filepath = GM_JOIN_PATH(subdir, filename);
 			if (filepath == NULL) {
 				goto error;
 			}
@@ -1571,33 +1571,7 @@ end:
 	return status;
 }
 
-int gm_concat(char *buf, size_t size, const char *strs[], size_t nstrs) {
-	size_t ch_index = 0;
-
-	for (size_t strs_index = 0; strs_index < nstrs; ++ strs_index) {
-		const char *str = strs[strs_index];
-
-		size_t strsize = strlen(str);
-		if (strsize >= size || ch_index >= size - strsize) {
-			errno = EINVAL;
-			return -1;
-		}
-
-		memcpy(buf + ch_index, str, strsize);
-		ch_index += strsize;
-	}
-
-	if (ch_index >= size) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	buf[ch_index] = '\0';
-
-	return 0;
-}
-
-char *gm_concat_ex(const char *strs[], size_t nstrs) {
+char *gm_concat(const char *strs[], size_t nstrs) {
 	size_t size = 1;
 	char *buf = NULL;
 	size_t ch_index = 0;
@@ -1633,46 +1607,7 @@ char *gm_concat_ex(const char *strs[], size_t nstrs) {
 	return buf;
 }
 
-int gm_join_path(char *buf, size_t size, const char *comps[], size_t ncomps) {
-	size_t ch_index = 0;
-	bool first = true;
-
-	for (size_t comp_index = 0; comp_index < ncomps; ++ comp_index) {
-		const char *comp = comps[comp_index];
-
-		if (first) {
-			first = false;
-		}
-		else if (ch_index >= size) {
-			errno = ENAMETOOLONG;
-			return -1;
-		}
-		else {
-			buf[ch_index] = GM_PATH_SEP;
-			++ ch_index;
-		}
-
-		size_t complen = strlen(comp);
-		if (complen >= size || ch_index >= size - complen) {
-			errno = ENAMETOOLONG;
-			return -1;
-		}
-
-		memcpy(buf + ch_index, comp, complen);
-		ch_index += complen;
-	}
-
-	if (ch_index >= size) {
-		errno = ENAMETOOLONG;
-		return -1;
-	}
-
-	buf[ch_index] = '\0';
-
-	return 0;
-}
-
-char *gm_join_path_ex(const char *comps[], size_t ncomps) {
+char *gm_join_path(const char *comps[], size_t ncomps) {
 	size_t size = 1;
 	char *path = NULL;
 	size_t ch_index = 0;

@@ -114,7 +114,7 @@ char *csd2_find_archive() {
 	struct stat info;
 
 	if (home) {
-		char *path = GM_JOIN_PATH_EX(home, CSD_STEAM_ARCHIVE);
+		char *path = GM_JOIN_PATH(home, CSD_STEAM_ARCHIVE);
 		if (path != NULL) {
 			if (stat(path, &info) < 0) {
 				if (errno != ENOENT) {
@@ -190,7 +190,7 @@ static char *find_path_ignore_case(const char *prefix, const char* const path[])
 			return NULL;
 		}
 
-		char *nextpath = GM_JOIN_PATH_EX(filepath, realname);
+		char *nextpath = GM_JOIN_PATH(filepath, realname);
 
 		closedir(dir);
 		free(filepath);

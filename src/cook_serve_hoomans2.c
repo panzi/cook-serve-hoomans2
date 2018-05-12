@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
 	printf("Found game archive: %s\n", game_name);
 
 	// create backup if there isn't one
-	backup_name = GM_CONCAT_EX(game_name, ".backup");
+	backup_name = GM_CONCAT(game_name, ".backup");
 	if (backup_name == NULL) {
 		perror("*** ERROR: creatig backup file name");
 		goto error;
