@@ -33,23 +33,34 @@ static char *get_path_from_registry(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValue
 		goto error;
 	}
 
-	if (dwSize == SIZE_MAX) {
+	if (dwSize > SIZE_MAX - sizeof(CSH2_DATA_WIN_PATH)) {
 		errno = ENAMETOOLONG;
 		goto error;
 	}
 
-	// The value might or might not have a terminating '\0'.
-	// This way I ensure it really always has.
-	dwSize += 1;
+	// The data might or might not have a terminating '\0', but the size of
+	// CSH2_DATA_WIN_PATH definitely contains space for a '\0' so this will
+	// be always enough for the text of both sources plus '\0' and using
+	// calloc() initialized the terminating '\0'.
+	dwSize += sizeof(CSH2_DATA_WIN_PATH);
 
 	path = calloc(dwSize, 1);
 	if (path == NULL) {
 		goto error;
 	}
 
-	if (RegQueryValueEx(hSubKey, lpValueName, NULL, &dwType, (LPBYTE)path, &dwSize) != ERROR_SUCCESS || dwType != REG_SZ) {
+	DWORD dwSize2 = dwSize;
+	if (RegQueryValueEx(hSubKey, lpValueName, NULL, &dwType, (LPBYTE)path, &dwSize2) != ERROR_SUCCESS || dwType != REG_SZ) {
 		goto error;
 	}
+
+	if (dwSize2 > dwSize) {
+		// registry key changed *right now*!
+		errno = EAGAIN;
+		goto error;
+	}
+
+	strcat(path, CSH2_DATA_WIN_PATH);
 
 	goto end;
 
