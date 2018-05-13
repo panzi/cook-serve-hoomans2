@@ -79,6 +79,78 @@ static int gm_copydata(FILE *src, off_t srcoff, FILE *dst, off_t dstoff, size_t 
 	return 0;
 }
 
+#if defined(GM_WINDOWS)
+#define WIN_PATH_UNC  "\\\\?\\UNC\\"
+#define WIN_PATH_QM   "\\\\?\\"
+#define WIN_PATH_DOT  "\\\\.\\"
+#define WIN_PATH_BKSL "\\\\"
+
+static bool gm_starts_with_ignore_case(const char *string, const char *prefix) {
+	size_t index = 0;
+	char ch = 0;
+	while ((ch = prefix[index])) {
+		if (tolower(ch) != tolower(string[index])) {
+			return false;
+		}
+		++ index;
+	}
+	return true;
+}
+
+// TODO: actually only sometimes '/' is equal to '\\'
+static const char *gm_skip_path_components(const char *path, size_t count) {
+	while (*path && count > 0) {
+		while (*path && *path != '\\' && *path != '/') {
+			++ path;
+		}
+
+		while (*path == '\\' || *path == '/') {
+			++ path;
+		}
+
+		-- count;
+	}
+
+	return path;
+}
+
+static const char *gm_skip_win_root(const char *path) {
+	if (isalpha(path[0]) && path[1] == ':' && (!path[2] || path[2] == '\\' || path[2] == '/')) {
+		if (!path[2]) {
+			return path + 2;
+		}
+		return path + 3;
+	}
+
+	if (gm_starts_with_ignore_case(path, WIN_PATH_UNC)) {
+		return gm_skip_path_components(path + sizeof(WIN_PATH_UNC) - 1, 2);
+	}
+
+	if (gm_starts_with_ignore_case(path, WIN_PATH_QM)) {
+		path += sizeof(WIN_PATH_QM) - 1;
+
+		if (isalpha(path[0]) && path[1] == ':' && (!path[2] || path[2] == '\\' || path[2] == '/')) {
+			if (!path[2]) {
+				return path + 2;
+			}
+			return path + 3;
+		}
+
+		return gm_skip_path_components(path, 2);
+	}
+
+	if (gm_starts_with_ignore_case(path, WIN_PATH_DOT)) {
+		return gm_skip_path_components(path + sizeof(WIN_PATH_DOT) - 1, 1);
+	}
+
+	if (gm_starts_with_ignore_case(path, WIN_PATH_BKSL)) {
+		return gm_skip_path_components(path + sizeof(WIN_PATH_BKSL) - 1, 2);
+	}
+
+	return path;
+}
+#endif
+
 static int gm_mkpath(const char *pathname) {
 	char *buf = NULL;
 	struct stat st;
@@ -107,14 +179,7 @@ static int gm_mkpath(const char *pathname) {
 
 #if defined(GM_WINDOWS)
 	// skip UNC prefix or drive letter
-	if (// UNC path
-		(ptr[0] == '\\' && ptr[1] == '\\') ||
-
-		// absolute short path
-		(isalpha(ptr[0]) && ptr[1] == ':'))
-	{
-		ptr += 2;
-	}
+	ptr = (char*)gm_skip_win_root(ptr);
 #endif
 
 	for (;; ++ ptr) {
