@@ -34,7 +34,7 @@ HugoRune42              , CUST_SPR_POOR/58.png
 DramaDemon              , CUST_SPR_POOR/24.png
 CD_Williams             , CUST_SPR_POOR/46.png
 Taterdactyl             , CUST_SPR_POOR/11.png
-NickCostas              , CUST_SPR_POOR/63.png
+NickCostas              , CUST_SPR_COMMON/54.png
 xanderdima              , CUST_SPR_COMMON/70.png
 scotchthistle           , CUST_SPR_COMMON/1.png
 tyriesays               , CUST_SPR_POOR/26.png
@@ -60,7 +60,7 @@ Soylent Heston          , CUST_SPR_COMMON/68.png
 Alegna                  , CUST_SPR_POOR/14.png
 Dani Figueiredo         , CUST_SPR_POOR/19.png
 BelliBellBell           , CUST_SPR_POOR/28.png
-Michelle Wavrick        , CUST_SPR_POOR/25.png
+Michelle Wavrick        , CUST_SPR_COMMON/3.png
 Mcs0083                 , CUST_SPR_POOR/39.png
 DRCroston               , CUST_SPR_POOR/36.png
 Bensmith999             , CUST_SPR_POOR/48.png
@@ -93,3 +93,5 @@ khaleesi kate 88        , CUST_SPR_POOR/3.png
 Jay Sear                , CUST_SPR_POOR/71.png
 Tyrolin Puxty           , CUST_SPR_POOR/15.png  , 170
 kicky_sam               , CUST_SPR_POOR/49.png
+lady pembroke           , CUST_SPR_POOR/25.png
+RobHinesWriter          , CUST_SPR_POOR/63.png
