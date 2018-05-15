@@ -33,7 +33,7 @@ static char *get_path_from_registry(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValue
 		goto error;
 	}
 
-	if (dwSize > SIZE_MAX - sizeof(CSH2_DATA_WIN_PATH)) {
+	if (dwSize > ULONG_MAX - sizeof(CSH2_DATA_WIN_PATH)) {
 		errno = ENAMETOOLONG;
 		goto error;
 	}
