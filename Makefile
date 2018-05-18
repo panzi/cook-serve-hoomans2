@@ -76,6 +76,7 @@ ifeq ($(TARGET),win64)
 else
 ifeq ($(TARGET),linux32)
 	CFLAGS=$(POSIX_CFLAGS)
+	BINEXT=-linux-i686
 	ARCH_FLAGS=-m32
 else
 ifeq ($(TARGET),linux64)
