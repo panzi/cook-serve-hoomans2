@@ -93,11 +93,29 @@ char *csd2_find_archive() {
 		{ HKEY_CURRENT_USER,  TEXT("Software\\Wow6432node\\Valve\\Steam"), TEXT("InstallPath") },
 		{ 0,                  0,                                           0                   }
 	};
+	static const char* paths[] = {
+		"C:\\Program Files\\Steam\\steamapps\\common\\CookServeDelicious2\\data.win",
+		NULL
+	};
+	struct stat info;
 
 	for (const struct reg_path* reg_path = reg_paths; reg_path->lpSubKey; ++ reg_path) {
 		char *path = get_path_from_registry(reg_path->hKey, reg_path->lpSubKey, reg_path->lpValueName);
 		if (path != NULL) {
 			return path;
+		}
+	}
+
+	// Fallback: Just guess
+	for (const char** nameptr = paths; *nameptr; ++ nameptr) {
+		if (stat(*nameptr, &info) < 0) {
+			if (errno != ENOENT) {
+				perror(*nameptr);
+			}
+			return NULL;
+		}
+		else if (S_ISREG(info.st_mode)) {
+			return strdup(*nameptr);
 		}
 	}
 
