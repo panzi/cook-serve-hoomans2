@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import csv
+import escsv
 from os.path import join as pjoin, abspath, dirname
 
 def make_list():
     names = []
     with open(pjoin(dirname(abspath(__file__)), "..", "hoomans.csv")) as fp:
-        for line in sorted(list(row[0].strip() for row in csv.reader(fp)), key=lambda name: name.lower()):
+        for line in sorted(list(row[0].strip() for row in escsv.read(fp)), key=lambda name: name.lower()):
             names.append(line[:25].strip())
     n = len(names)
     part_count = 4

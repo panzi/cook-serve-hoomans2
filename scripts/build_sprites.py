@@ -3,7 +3,7 @@
 import os
 import re
 import sys
-import csv
+import escsv
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from io import BytesIO
 from os.path import splitext, isdir, join as pjoin, abspath, dirname
@@ -33,7 +33,7 @@ def timing(name, inline=True):
 
 def load_names():
 	with open(pjoin(dirname(abspath(__file__)), '..', 'hoomans.csv'), 'r') as fp:
-		for row in csv.reader(fp):
+		for row in escsv.read(fp):
 			hname = row[0].strip()
 			hpath = row[1].strip()
 			y = None
@@ -59,61 +59,95 @@ def find_font(*fontfiles):
 						return pjoin(dirpath, filename)
 	raise KeyError('font not found: ' + ', '.join(fontfiles))
 
-SPLIT = re.compile(r'[-_\s+]')
+SPLIT = re.compile(r'[-_ \r\t\v]+|\n')
 BORDER = re.compile(r'([a-zäöüß])([A-Z0-9ÄÖÜ])')
 
+def split_text(text):
+	words = []
+	index = 0
+	n = len(text)
+	while index < n:
+		match = SPLIT.search(text, index)
+
+		if match:
+			word_end = match.start()
+		else:
+			word_end = n
+
+		if index != word_end:
+			words.append(text[index:word_end])
+
+		if match:
+			if match[0] == '\n':
+				words.append('\n')
+			index = match.end()
+		else:
+			break
+
+	return words
+
 def _wrap_text_reformat(text, width, font):
-	words = SPLIT.split(BORDER.sub(r'\1 \2', text))
+	words = split_text(BORDER.sub(r'\1 \2', text))
 	lines = []
 	line = []
 	word_index = 0
 	while word_index < len(words):
 		word = words[word_index]
-		line.append(word)
-		size = font.getsize(' '.join(line))[0]
-		if size > width:
-			del line[-1]
-			if line:
-				lines.append(' '.join(line))
-				line = []
-			else:
-				start = 0
-				end = 0
-				while start < len(word):
-					for index in range(start + 1, len(word) + 1):
-						if font.getsize(word[start:index])[0] > width:
-							break
-						end = index
-					if start == end:
-						end += 1 # at least one codepoint
-					lines.append(word[start:end])
-					start = end
-				word_index += 1
-		else:
+		if word == '\n': # force newline
+			lines.append(' '.join(line))
+			line = []
 			word_index += 1
+		else:
+			line.append(word)
+			size = font.getsize(' '.join(line))[0]
+			if size > width:
+				del line[-1]
+				if line:
+					lines.append(' '.join(line))
+					line = []
+				else:
+					start = 0
+					end = 0
+					while start < len(word):
+						for index in range(start + 1, len(word) + 1):
+							if font.getsize(word[start:index])[0] > width:
+								break
+							end = index
+						if start == end:
+							end += 1 # at least one codepoint
+						lines.append(word[start:end])
+						start = end
+					word_index += 1
+			else:
+				word_index += 1
 	if line:
 		lines.append(' '.join(line))
 	return lines
 
 def wrap_text(text, width, font):
 	text = text.strip("-_\n\r\t ")
-	words = SPLIT.split(text)
+	words = split_text(text)
 	lines = []
 	line = []
 	word_index = 0
 	while word_index < len(words):
 		word = words[word_index]
-		line.append(word)
-		size = font.getsize(' '.join(line))[0]
-		if size > width:
-			del line[-1]
-			if line:
-				lines.append(' '.join(line))
-				line = []
-			else:
-				return _wrap_text_reformat(text, width, font)
-		else:
+		if word == '\n': # force newline
+			lines.append(' '.join(line))
+			line = []
 			word_index += 1
+		else:
+			line.append(word)
+			size = font.getsize(' '.join(line))[0]
+			if size > width:
+				del line[-1]
+				if line:
+					lines.append(' '.join(line))
+					line = []
+				else:
+					return _wrap_text_reformat(text, width, font)
+			else:
+				word_index += 1
 	if line:
 		lines.append(' '.join(line))
 	return lines
@@ -149,7 +183,7 @@ def escape_c_string(s):
 	return b''.join(escape_c_byte(c) for c in s.encode()).decode()
 
 def build_sprites(fp, spritedir, builddir):
-	font = ImageFont.truetype(find_font('OpenSans_Bold.ttf', 'OpenSans_Regular.ttf', 'Arial.ttf'), 26)
+	font = ImageFont.truetype(find_font('OpenSans_Bold.ttf', 'OpenSans_Regular.ttf', 'Arial.ttf'), 23)
 	blur = ImageFilter.GaussianBlur(2)
 	patch_def = []
 	patch_data_externs = []
