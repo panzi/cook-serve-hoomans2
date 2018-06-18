@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import csv
+import escsv
 from cgi import escape as escape_html
 from string import Template
 
@@ -10,7 +10,7 @@ def make_hoomans_html():
     
     hoomans = []
     with open("hoomans.csv") as fp:
-        for row in sorted(list(csv.reader(fp)), key=lambda row: row[0].lower()):
+        for row in sorted(list(escsv.read(fp)), key=lambda row: row[0].lower()):
             name = row[0].strip()
             img  = row[1].strip()
             img_url = 'https://raw.githubusercontent.com/panzi/cook-serve-hoomans2/master/sprites/' + img
@@ -19,7 +19,7 @@ def make_hoomans_html():
             hoomans.append('\t\t\t<div class="hooman-img">')
             hoomans.append('\t\t\t\t<img src="%s" />' % escape_html(img_url))
             hoomans.append('\t\t\t</div>')
-            hoomans.append('\t\t\t<div class="label">%s</div>' % escape_html(name))
+            hoomans.append('\t\t\t<div class="label">%s</div>' % '<br/>'.join(escape_html(part) for part in name.split('\n')))
             hoomans.append('\t\t</div>')
             hoomans.append('')
 
