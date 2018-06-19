@@ -95,6 +95,7 @@ char *csd2_find_archive() {
 	};
 	static const char* paths[] = {
 		"C:\\Program Files\\Steam\\steamapps\\common\\CookServeDelicious2\\data.win",
+		"C:\\Program Files (x86)\\Steam\\steamapps\\common\\CookServeDelicious2\\data.win",
 		NULL
 	};
 	struct stat info;
@@ -102,7 +103,15 @@ char *csd2_find_archive() {
 	for (const struct reg_path* reg_path = reg_paths; reg_path->lpSubKey; ++ reg_path) {
 		char *path = get_path_from_registry(reg_path->hKey, reg_path->lpSubKey, reg_path->lpValueName);
 		if (path != NULL) {
-			return path;
+			if (stat(path, &info) < 0) {
+				if (errno != ENOENT) {
+					perror(path);
+				}
+			}
+			else if (S_ISREG(info.st_mode)) {
+				return path;
+			}
+			free(path);
 		}
 	}
 
@@ -112,7 +121,6 @@ char *csd2_find_archive() {
 			if (errno != ENOENT) {
 				perror(*nameptr);
 			}
-			return NULL;
 		}
 		else if (S_ISREG(info.st_mode)) {
 			return strdup(*nameptr);
