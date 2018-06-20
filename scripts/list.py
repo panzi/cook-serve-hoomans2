@@ -7,7 +7,7 @@ def make_list():
     names = []
     with open(pjoin(dirname(abspath(__file__)), "..", "hoomans.csv")) as fp:
         for line in sorted(list(row[0].strip() for row in escsv.read(fp)), key=lambda name: name.lower()):
-            names.append(line[:25].strip())
+            names.append(line.strip().replace('\n', ' '))
     n = len(names)
     part_count = 4
     partlen = (n + part_count - 1) // part_count
