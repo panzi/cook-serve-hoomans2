@@ -183,7 +183,7 @@ def escape_c_string(s):
 	return b''.join(escape_c_byte(c) for c in s.encode()).decode()
 
 def build_sprites(fp, spritedir, builddir):
-	font = ImageFont.truetype(find_font('OpenSans_Bold.ttf', 'OpenSans_Regular.ttf', 'Arial.ttf'), 23)
+	font = ImageFont.truetype(find_font('OpenSans_Bold.ttf', 'OpenSans_Regular.ttf', 'Arial.ttf'), 22)
 	blur = ImageFilter.GaussianBlur(2)
 	patch_def = []
 	patch_data_externs = []
@@ -314,11 +314,13 @@ def build_sprites(fp, spritedir, builddir):
 							for other_key, other_sprite in filler_replacement_sprites:
 								ow = other_sprite.size[0]
 								if ow <= width:
-									filler_count = filler_stats.get(other_key, 0)
-									if filler_count < MAX_FILLER_COUNT:
-										filler_stats[other_key] = filler_count + 1
+									other_uses = filler_stats.get(other_key)
+									if other_uses is None:
+										filler_stats[other_key] = other_uses = []
+									if len(other_uses) < MAX_FILLER_COUNT:
+										other_uses.append((sprite_name, tpag_index))
 										found = True
-										filler_replacement_sprites.sort(key=lambda item: (filler_stats.get(item[0], 0), -item[1].size[0], item[1].size[1]))
+										filler_replacement_sprites.sort(key=lambda item: (len(filler_stats.get(item[0], ())), -item[1].size[0], item[1].size[1]))
 										break
 
 							if found:
@@ -349,16 +351,16 @@ def build_sprites(fp, spritedir, builddir):
 								replacement_sprites_by_txtr[txtr_index] = [sprite_info]
 
 				if filler_stats:
-					filler_stats = list((count, key) for key, count in filler_stats.items())
-					filler_stats.sort()
+					filler_stats = list((filler_sprite_infos, key) for key, filler_sprite_infos in filler_stats.items())
+					filler_stats.sort(key=lambda item: (len(item[0]), item[1]))
 					print('Filler usage:')
 					sum_count = 0
-					for count, (sprite_name, tpag_index) in filler_stats:
+					for other_uses, (sprite_name, tpag_index) in filler_stats:
 						sprite_path = '%s/%d.png' % (sprite_name, tpag_index)
 						hooman = HOOMAN_NAMES.get(sprite_path)
 						hname = hooman[0] if hooman else ''
-						print('%5d %-25s %s' % (count, hname, sprite_path))
-						sum_count += count
+						print('%5d %-34s %-22s %s' % (len(other_uses), hname.replace('\n', ' '), sprite_path, ' '.join(('%s/%d.png' % sprite_info).ljust(22) for sprite_info in other_uses)))
+						sum_count += len(other_uses)
 					print("That makes %d filler sprites." % sum_count)
 
 				if taller_filler_count > 0:
