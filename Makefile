@@ -8,11 +8,18 @@ BUILDDIR=build
 BUILDDIR_BIN=$(BUILDDIR)/$(TARGET)
 BUILDDIR_SRC=$(BUILDDIR)/src
 INCLUDE=-I$(BUILDDIR_SRC) -Isrc
+BUILD_FLAGS=
 COMMON_CFLAGS=-Wall -Werror -Wextra -std=gnu11 $(INCLUDE)
 ifeq ($(DEBUG),ON)
 	COMMON_CFLAGS+=-g -DDEBUG
+	BUILD_FLAGS+=--debug
 else
 	COMMON_CFLAGS+=-O2
+endif
+ifeq ($(AUTOFIX),OFF)
+	# pass
+else
+	BUILD_FLAGS+=--autofix
 endif
 POSIX_CFLAGS=$(COMMON_CFLAGS) -pedantic -fdiagnostics-color
 CFLAGS=$(COMMON_CFLAGS)
@@ -128,7 +135,7 @@ unpatch: $(ARCHIVE).backup
 	cp "$<" "$(ARCHIVE)"
 
 build_sprites:
-	scripts/build_sprites.py sprites $(BUILDDIR_SRC)
+	scripts/build_sprites.py $(BUILD_FLAGS) sprites $(BUILDDIR_SRC)
 
 pkg: VERSION=$(shell git describe --tags)
 pkg: $(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET).zip $(EXT_DEP) cook_serve_hoomans2
@@ -171,7 +178,7 @@ $(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET).zip: gmdump gminfo
 	rm -r $(BUILDDIR_BIN)/utils-for-advanced-users-$(VERSION)-$(TARGET)
 
 $(BUILDDIR_SRC)/csh2_patch_def.h: $(wildcard sprites/*/*.png) scripts/build_sprites.py hoomans.csv
-	scripts/build_sprites.py sprites $(BUILDDIR_SRC)
+	scripts/build_sprites.py $(BUILD_FLAGS) sprites $(BUILDDIR_SRC)
 
 $(BUILDDIR_SRC)/csh2_patch_def.c: $(BUILDDIR_SRC)/csh2_patch_def.h
 

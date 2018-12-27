@@ -182,7 +182,7 @@ def escape_c_byte(c):
 def escape_c_string(s):
 	return b''.join(escape_c_byte(c) for c in s.encode()).decode()
 
-def build_sprites(fp, spritedir, builddir):
+def build_sprites(fp, spritedir, builddir, autofix, debug):
 	font = ImageFont.truetype(find_font('OpenSans_Bold.ttf', 'OpenSans_Regular.ttf', 'Arial.ttf'), 22)
 	blur = ImageFilter.GaussianBlur(2)
 	patch_def = []
@@ -389,6 +389,7 @@ def build_sprites(fp, spritedir, builddir):
 					file_infos.append(info)
 
 				seen_sprites = set()
+				ok = True
 				for txtr_index, (unknown1, unknown2, offset) in enumerate(file_infos):
 					if offset < start_offset or offset > end_offset:
 						raise FileFormatError("illegal TXTR data offset: %d" % offset)
@@ -406,7 +407,6 @@ def build_sprites(fp, spritedir, builddir):
 						data = fp.read(info.filesize)
 
 						image = Image.open(BytesIO(data))
-
 						for sprite_name, tpag_index, txtr_index, (x, y, width, height) in sprites:
 							sprite_key = (sprite_name, tpag_index)
 							if sprite_key in seen_sprites:
@@ -415,19 +415,34 @@ def build_sprites(fp, spritedir, builddir):
 							seen_sprites.add(sprite_key)
 
 							sprite = replacement_sprites[sprite_key]
-							if sprite.size != (width, height):
-								raise FileFormatError("Sprite %s %d has incompatible size. PNG size: %d x %d, size in game archive: %d x %d" %
-									(sprite_name, tpag_index, sprite.size[0], sprite.size[1], width, height))
+							sprt_width, sprt_height = sprite.size
+							if sprt_width != width or sprt_height != height:
+								if autofix and sprt_width <= width and sprt_height <= height:
+									sys.stderr.write("WARNING: Auto-fixing sprite %s %d with incompatible size. PNG size: %d x %d, size in game archive: %d x %d\n" %
+										(sprite_name, tpag_index, sprt_width, sprt_height, width, height))
 
-							image.paste(sprite, (x, y, x + width, y + height))
+									tmp_img = Image.new('RGBA', (width, height))
+									tmp_x = (width  - sprt_width)  // 2
+									tmp_y = (height - sprt_height) // 2
+									tmp_img.paste(sprite, (tmp_x, tmp_y, tmp_x + sprt_width, tmp_y + sprt_height))
 
-						# DEBUG:
-						#image.save(pjoin(builddir, '%05d.png' % txtr_index))
+									sprite = tmp_img
+								else:
+									ok = False
+									sys.stderr.write("ERROR: Sprite %s %d has incompatible size. PNG size: %d x %d, size in game archive: %d x %d\n" %
+										(sprite_name, tpag_index, sprt_width, sprt_height, width, height))
+							if ok:
+								image.paste(sprite, (x, y, x + width, y + height))
 
-						buf = BytesIO()
-						image.save(buf, format='PNG')
-						replacement_txtrs[txtr_index] = (image.size, buf.getvalue())
+						if ok:
+							if debug:
+								image.save(pjoin(builddir, '%05d.png' % txtr_index))
 
+							buf = BytesIO()
+							image.save(buf, format='PNG')
+							replacement_txtrs[txtr_index] = (image.size, buf.getvalue())
+				if not ok:
+					sys.exit(1)
 			fp.seek(next_offset, 0)
 
 	with timing("check sprites"):
@@ -539,13 +554,24 @@ const struct gm_patch csh2_patches[] = {
 			outfp.write(patch_def_c)
 
 if __name__ == '__main__':
-	spritedir = sys.argv[1]
-	builddir  = sys.argv[2]
+	from getopt import getopt
+	opts, args = getopt(sys.argv[1:], 'ad', ['autofix', 'debug'])
 
-	if len(sys.argv) > 3:
-		archive = sys.argv[3]
+	autofix = False
+	debug = False
+	for opt, val in opts:
+		if opt == '--autofix' or opt == '-a':
+			autofix = True
+		elif opt == '--debug' or opt == '-d':
+			debug = True
+
+	spritedir = args[0]
+	builddir  = args[1]
+
+	if len(args) > 2:
+		archive = args[2]
 	else:
 		archive = find_archive()
 
 	with open(archive, 'rb') as fp:
-		build_sprites(fp, spritedir, builddir)
+		build_sprites(fp, spritedir, builddir, autofix, debug)
