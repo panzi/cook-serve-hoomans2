@@ -498,6 +498,7 @@ const char *gm_section_name(enum gm_section section) {
 	case GM_LANG: return "LANG";
 	case GM_GLOB: return "GLOB";
 	case GM_EMBI: return "EMBI";
+	case GM_TGIN: return "TGIN";
 	default: return NULL;
 	}
 }
@@ -528,6 +529,7 @@ enum gm_section gm_parse_section(const uint8_t *name) {
 	else if (memcmp("LANG", name, 4) == 0) { return GM_LANG; }
 	else if (memcmp("GLOB", name, 4) == 0) { return GM_GLOB; }
 	else if (memcmp("EMBI", name, 4) == 0) { return GM_EMBI; }
+	else if (memcmp("TGIN", name, 4) == 0) { return GM_TGIN; }
 	else return GM_END;
 }
 
